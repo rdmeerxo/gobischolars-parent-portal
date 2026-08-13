@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GobiScholars Academy — Эцэг эхийн тайлан</title>
+<title>GobiScholars Academy — Эцэг эхийн портал</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -280,7 +280,7 @@
   .section-head h2{
     font-size:19px;
     margin:0;
-    color:var(--maroon-dark);
+    color:var(--ink);
   }
 
   .attendance-grid{
@@ -336,19 +336,18 @@
     font-weight:600;
   }
   table.score-table td{
-    padding:10px 34px 20px 12px;
+    padding:10px 12px;
     border-bottom:1px solid var(--card-line);
-    position:relative;
   }
   table.score-table tr.total-row td{
     background:var(--card);
-    font-weight:600;
+    font-weight:700;
   }
   table.score-table tr:nth-child(even):not(.total-row) td{background:var(--card);}
   .score-delta{
-    position:absolute;
-    right:10px;
-    bottom:5px;
+    display:block;
+    text-align:right;
+    margin-top:2px;
     font-family:'IBM Plex Mono',monospace;
     font-size:11px;
     font-weight:600;
@@ -500,7 +499,7 @@
 <!-- ============ LOADING SCREEN ============ -->
 <div id="loading-screen">
   <div class="spinner"></div>
-  <div>Тайланг ачааллаж байна...</div>
+  <div>Тайланг ачааллаж байна. Түр хүлээнэ үү...</div>
 </div>
 
 <!-- ============ REPORT SCREEN ============ -->
@@ -572,7 +571,7 @@
    ======================================================================= */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwd1I59ccOezybhQ7n7gKX6V3dv6o4MER0Ki1feQXqTMa9ec0XqZWgOk3dOU4tBVsGNog/exec';
 
-const COLORS = { maroon:'#C4151C', accent:'#4B5563', forest:'#3F6B4F', line:'#E3E3E6' };
+const COLORS = { maroon:'#C4151C', accent:'#9CA3AF', forest:'#3F6B4F', line:'#E3E3E6' };
 let charts = {};
 
 function showScreen(id){
@@ -678,7 +677,7 @@ function renderSatTable(rows){
   rows.forEach((r,i)=>{
     const prev = i > 0 ? rows[i-1] : null;
     html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td>'
-      + '<td>'+esc(r.Total)+(prev?deltaHtml(r.Total, prev.Total):'')+'</td>'
+      + '<td><strong>'+esc(r.Total)+'</strong>'+(prev?deltaHtml(r.Total, prev.Total):'')+'</td>'
       + '<td>'+esc(r.EnglishScore)+(prev?deltaHtml(r.EnglishScore, prev.EnglishScore):'')+'</td>'
       + '<td>'+esc(r.MathScore)+(prev?deltaHtml(r.MathScore, prev.MathScore):'')+'</td></tr>';
   });
@@ -697,22 +696,44 @@ function renderIeltsTable(rows){
   let html = '<table class="score-table"><thead><tr><th>Ур чадвар</th>' + testNames.map(t=>'<th>'+esc(t)+'</th>').join('') + '</tr></thead><tbody>';
   skills.forEach(([key,label])=>{
     html += '<tr><td>'+label+'</td>' + rows.map((r,i)=>{
-      if(isAbsentIelts(r)) return '<td><span class="absent-mark">—</span></td>';
+      const status = ieltsStatusLabel(r);
+      if(status) return '<td><span class="absent-mark">'+esc(status)+'</span></td>';
       const prev = findPrevValidIelts(rows, i);
       return '<td>'+esc(r[key])+(prev?deltaHtml(r[key], prev[key]):'')+'</td>';
     }).join('') + '</tr>';
   });
   html += '<tr class="total-row"><td>Нийт (Overall)</td>' + rows.map((r,i)=>{
-    if(isAbsentIelts(r)) return '<td><span class="absent-mark">—</span></td>';
+    const status = ieltsStatusLabel(r);
+    if(status) return '<td><span class="absent-mark">'+esc(status)+'</span></td>';
     const prev = findPrevValidIelts(rows, i);
-    return '<td>'+esc(r.Overall)+(prev?deltaHtml(r.Overall, prev.Overall):'')+'</td>';
+    return '<td><strong>'+esc(r.Overall)+'</strong>'+(prev?deltaHtml(r.Overall, prev.Overall):'')+'</td>';
   }).join('') + '</tr>';
   html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
+// Returns a Mongolian status label ('Чөлөөтэй' / 'Тасалсан') if this test row
+// should be treated as no-score, or null if it has a real score.
+// Reads an optional "Status" column from the sheet first (e.g. Excused/Absent,
+// or Чөлөөтэй/Тасалсан) so you can be explicit. If there's no Status column,
+// it falls back to: all four skills explicitly entered as 0 = absent.
+// Blank/empty cells are NOT treated as absent (that just means not entered yet).
+function ieltsStatusLabel(r){
+  const status = String(r.Status || '').trim().toLowerCase();
+  if(status){
+    if(status.indexOf('чөлөө') > -1 || status === 'excused') return 'Чөлөөтэй';
+    if(status.indexOf('тасал') > -1 || status === 'absent') return 'Тасалсан';
+  }
+  const allZero = ['Reading','Listening','Speaking','Writing'].every(k => {
+    const v = r[k];
+    if(v === '' || v === null || v === undefined) return false;
+    return Number(v) === 0;
+  });
+  return allZero ? 'Тасалсан' : null;
+}
+
 function isAbsentIelts(r){
-  return ['Reading','Listening','Speaking','Writing'].every(k => Number(r[k]) === 0);
+  return !!ieltsStatusLabel(r);
 }
 
 function findPrevValidIelts(rows, i){
@@ -771,7 +792,7 @@ function renderSatCharts(rows){
         pointBackgroundColor: COLORS.maroon
       }]
     },
-    options: chartOpts(1600, false, 600)
+    options: chartOpts(1600, false, 800)
   });
 }
 
@@ -790,7 +811,7 @@ function renderIeltsChart(rows){
     data:{
       labels: skillLabels,
       datasets: rows.map((r,i)=>({
-        label: formatTestDate(r.TestName) + (isAbsentIelts(r) ? ' (Тасалсан)' : ''),
+        label: formatTestDate(r.TestName) + (ieltsStatusLabel(r) ? ' (' + ieltsStatusLabel(r) + ')' : ''),
         data: skillKeys.map(k => isAbsentIelts(r) ? null : r[k]),
         backgroundColor: palette[i % palette.length],
         borderRadius:4
@@ -804,10 +825,10 @@ function chartOpts(max, showLegend, min){
   return {
     responsive:true,
     maintainAspectRatio:true,
-    plugins:{ legend:{ display: !!showLegend, position:'top', labels:{ font:{ family:'Poppins', size:11 } } } },
+    plugins:{ legend:{ display: !!showLegend, position:'top', labels:{ font:{ family:'Poppins', size:11 }, color:'#6B7280', boxWidth:12 } } },
     scales:{
-      y:{ beginAtZero: min === undefined, min: min, max:max, grid:{ color: COLORS.line }, ticks:{ font:{ family:'IBM Plex Mono', size:10 } } },
-      x:{ grid:{ display:false }, ticks:{ font:{ family:'Poppins', size:11 } } }
+      y:{ beginAtZero: min === undefined, min: min, max:max, grid:{ color:'#F0F0F1', drawBorder:false }, ticks:{ font:{ family:'IBM Plex Mono', size:10 }, color:'#9CA3AF' } },
+      x:{ grid:{ display:false, drawBorder:false }, ticks:{ font:{ family:'Poppins', size:11 }, color:'#6B7280' } }
     }
   };
 }
