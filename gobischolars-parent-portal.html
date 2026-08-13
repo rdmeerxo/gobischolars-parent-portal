@@ -544,6 +544,35 @@
     white-space:pre-line;
   }
 
+  .contact-card{
+    background:var(--white);
+    border:1px solid var(--card-line);
+    border-radius:20px;
+    padding:22px 24px;
+  }
+  .contact-message{
+    font-size:14px;
+    color:var(--ink-soft);
+    line-height:1.65;
+    margin:0 0 18px;
+  }
+  .contact-links{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .contact-link{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .contact-link svg{flex-shrink:0; color:var(--maroon);}
+  .contact-link:hover{color:var(--maroon);}
+
   .empty-state{
     font-size:13.5px;
     color:var(--ink-soft);
@@ -697,6 +726,27 @@
     <section style="animation-delay:.35s">
       <div class="section-head"><span class="eyebrow">07</span><h2>Багш нарын тайлбар</h2></div>
       <div class="notes-grid" id="notes-wrap"></div>
+    </section>
+
+    <section style="animation-delay:.4s">
+      <div class="section-head"><span class="eyebrow">08</span><h2>Холбоо барих</h2></div>
+      <div class="contact-card">
+        <p class="contact-message">Асуух зүйл, тусламж хэрэгтэй үед бидэнтэй чөлөөтэй холбогдоорой. Таны хүүхдийг их сургуульд элсэх замд хамтдаа алхацгаая.</p>
+        <div class="contact-links">
+          <a class="contact-link" href="mailto:info@gobischolars.com">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v12H3V6z" stroke="currentColor" stroke-width="1.6"/><path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            info@gobischolars.com
+          </a>
+          <a class="contact-link" href="tel:+97680531163">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            +976 8053 1163
+          </a>
+          <a class="contact-link" href="tel:+97695009123">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            +976 9500 9123
+          </a>
+        </div>
+      </div>
     </section>
 
   </div>
