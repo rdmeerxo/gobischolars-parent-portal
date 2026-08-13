@@ -269,7 +269,14 @@
     border-bottom:2px solid var(--card-line);
     padding-bottom:10px;
   }
-  .section-head .eyebrow{margin:0;color:var(--maroon);}
+  .section-head .eyebrow{
+    margin:0;
+    color:var(--maroon);
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:0;
+    text-transform:none;
+  }
   .section-head h2{
     font-size:19px;
     margin:0;
@@ -329,8 +336,9 @@
     font-weight:600;
   }
   table.score-table td{
-    padding:10px 12px;
+    padding:10px 34px 20px 12px;
     border-bottom:1px solid var(--card-line);
+    position:relative;
   }
   table.score-table tr.total-row td{
     background:var(--card);
@@ -338,14 +346,20 @@
   }
   table.score-table tr:nth-child(even):not(.total-row) td{background:var(--card);}
   .score-delta{
+    position:absolute;
+    right:10px;
+    bottom:5px;
     font-family:'IBM Plex Mono',monospace;
     font-size:11px;
     font-weight:600;
-    margin-top:2px;
   }
   .delta-up{color:#16A34A;}
   .delta-down{color:var(--maroon);}
   .delta-flat{color:var(--ink-soft);}
+  .absent-mark{
+    color:var(--ink-soft);
+    font-weight:600;
+  }
 
   .chart-grid{
     display:grid;
@@ -525,7 +539,7 @@
       <div class="blurb"><b>Товч мэдээлэл:</b> <span id="sat-blurb"></span></div>
       <div id="sat-table-wrap"></div>
       <div class="chart-grid">
-        <div class="chart-card"><div class="chart-title">Дэд оноо</div><canvas id="sat-skills-chart"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Онооны задаргаа</div><canvas id="sat-skills-chart"></canvas></div>
         <div class="chart-card"><div class="chart-title">Нийт оноо</div><canvas id="sat-total-chart"></canvas></div>
       </div>
     </section>
@@ -683,16 +697,29 @@ function renderIeltsTable(rows){
   let html = '<table class="score-table"><thead><tr><th>Ур чадвар</th>' + testNames.map(t=>'<th>'+esc(t)+'</th>').join('') + '</tr></thead><tbody>';
   skills.forEach(([key,label])=>{
     html += '<tr><td>'+label+'</td>' + rows.map((r,i)=>{
-      const prev = i > 0 ? rows[i-1] : null;
+      if(isAbsentIelts(r)) return '<td><span class="absent-mark">—</span></td>';
+      const prev = findPrevValidIelts(rows, i);
       return '<td>'+esc(r[key])+(prev?deltaHtml(r[key], prev[key]):'')+'</td>';
     }).join('') + '</tr>';
   });
   html += '<tr class="total-row"><td>Нийт (Overall)</td>' + rows.map((r,i)=>{
-    const prev = i > 0 ? rows[i-1] : null;
+    if(isAbsentIelts(r)) return '<td><span class="absent-mark">—</span></td>';
+    const prev = findPrevValidIelts(rows, i);
     return '<td>'+esc(r.Overall)+(prev?deltaHtml(r.Overall, prev.Overall):'')+'</td>';
   }).join('') + '</tr>';
   html += '</tbody></table>';
   wrap.innerHTML = html;
+}
+
+function isAbsentIelts(r){
+  return ['Reading','Listening','Speaking','Writing'].every(k => Number(r[k]) === 0);
+}
+
+function findPrevValidIelts(rows, i){
+  for(let j = i - 1; j >= 0; j--){
+    if(!isAbsentIelts(rows[j])) return rows[j];
+  }
+  return null;
 }
 
 function deltaHtml(currRaw, prevRaw){
@@ -723,7 +750,7 @@ function renderSatCharts(rows){
       labels,
       datasets:[
         { label:'Англи хэл', data: rows.map(r=>r.EnglishScore), backgroundColor: COLORS.maroon, borderRadius:4 },
-        { label:'Мат', data: rows.map(r=>r.MathScore), backgroundColor: COLORS.forest, borderRadius:4 }
+        { label:'Мат', data: rows.map(r=>r.MathScore), backgroundColor: COLORS.accent, borderRadius:4 }
       ]
     },
     options: chartOpts(800, true)
@@ -744,7 +771,7 @@ function renderSatCharts(rows){
         pointBackgroundColor: COLORS.maroon
       }]
     },
-    options: chartOpts(1600, false)
+    options: chartOpts(1600, false, 600)
   });
 }
 
@@ -757,14 +784,14 @@ function renderIeltsChart(rows){
   }
   const skillLabels = ['Ярих','Сонсох','Бичих','Унших'];
   const skillKeys = ['Speaking','Listening','Writing','Reading'];
-  const palette = [COLORS.maroon, COLORS.accent, COLORS.forest, '#6B5B4E'];
+  const palette = ['#C4151C', '#9CA3AF', '#93C5FD', '#F9A8D4'];
   charts['ielts-chart'] = new Chart(canvas, {
     type:'bar',
     data:{
       labels: skillLabels,
       datasets: rows.map((r,i)=>({
-        label: formatTestDate(r.TestName),
-        data: skillKeys.map(k=>r[k]),
+        label: formatTestDate(r.TestName) + (isAbsentIelts(r) ? ' (Тасалсан)' : ''),
+        data: skillKeys.map(k => isAbsentIelts(r) ? null : r[k]),
         backgroundColor: palette[i % palette.length],
         borderRadius:4
       }))
@@ -773,13 +800,13 @@ function renderIeltsChart(rows){
   });
 }
 
-function chartOpts(max, showLegend){
+function chartOpts(max, showLegend, min){
   return {
     responsive:true,
     maintainAspectRatio:true,
     plugins:{ legend:{ display: !!showLegend, position:'top', labels:{ font:{ family:'Poppins', size:11 } } } },
     scales:{
-      y:{ beginAtZero:true, max:max, grid:{ color: COLORS.line }, ticks:{ font:{ family:'IBM Plex Mono', size:10 } } },
+      y:{ beginAtZero: min === undefined, min: min, max:max, grid:{ color: COLORS.line }, ticks:{ font:{ family:'IBM Plex Mono', size:10 } } },
       x:{ grid:{ display:false }, ticks:{ font:{ family:'Poppins', size:11 } } }
     }
   };
