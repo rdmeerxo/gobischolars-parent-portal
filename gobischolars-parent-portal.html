@@ -205,22 +205,28 @@
     list-style:none;
     margin:0;
     padding:0;
-    display:flex;
-    flex-direction:column;
-    gap:9px;
+    display:grid;
+    grid-template-columns:max-content 1fr;
+    row-gap:9px;
+    column-gap:18px;
   }
   .info-list li{
-    font-size:14px;
-    color:var(--ink);
+    display:contents;
   }
   .info-list .info-label{
-    display:inline-block;
-    min-width:96px;
     color:var(--ink-soft);
     font-size:12px;
     letter-spacing:0.06em;
     text-transform:uppercase;
     font-weight:600;
+    white-space:nowrap;
+    padding-top:1px;
+  }
+  .info-list .info-value{
+    font-size:14px;
+    color:var(--ink);
+    min-width:0;
+    overflow-wrap:break-word;
   }
   .back-link{
     display:inline-flex;
@@ -330,7 +336,16 @@
     background:var(--card);
     font-weight:600;
   }
-  table.score-table tr:nth-child(even):not(.total-row) td{background:#FCFAF5;}
+  table.score-table tr:nth-child(even):not(.total-row) td{background:var(--card);}
+  .score-delta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .delta-up{color:#16A34A;}
+  .delta-down{color:var(--maroon);}
+  .delta-flat{color:var(--ink-soft);}
 
   .chart-grid{
     display:grid;
@@ -484,10 +499,11 @@
       <p class="eyebrow">Summer Scholars · GobiScholars Academy</p>
       <h1 id="student-name"></h1>
       <ul class="info-list">
-        <li><span class="info-label">Сургууль</span><span id="student-school"></span></li>
-        <li><span class="info-label">Хөтөлбөр</span><span id="student-program"></span></li>
-        <li><span class="info-label">Холбоо барих</span><span id="student-contact"></span></li>
-        <li><span class="info-label">Хуваарь</span><span id="student-schedule"></span></li>
+        <li><span class="info-label">Сургууль</span><span class="info-value" id="student-school"></span></li>
+        <li><span class="info-label">Хөтөлбөр</span><span class="info-value" id="student-program"></span></li>
+        <li><span class="info-label">Дугаар</span><span class="info-value" id="student-phone"></span></li>
+        <li><span class="info-label">Мэйл хаяг</span><span class="info-value" id="student-email"></span></li>
+        <li><span class="info-label">Хуваарь</span><span class="info-value" id="student-schedule"></span></li>
       </ul>
       <a class="back-link" onclick="goBack()">← Өөр код оруулах</a>
     </div>
@@ -509,8 +525,8 @@
       <div class="blurb"><b>Товч мэдээлэл:</b> <span id="sat-blurb"></span></div>
       <div id="sat-table-wrap"></div>
       <div class="chart-grid">
-        <div class="chart-card"><div class="chart-title">Унших ба бичих</div><canvas id="sat-rw-chart"></canvas></div>
-        <div class="chart-card"><div class="chart-title">Математик</div><canvas id="sat-math-chart"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Дэд оноо</div><canvas id="sat-skills-chart"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Нийт оноо</div><canvas id="sat-total-chart"></canvas></div>
       </div>
     </section>
 
@@ -603,7 +619,8 @@ function renderReport(data){
   document.getElementById('student-name').textContent = s.name || '';
   document.getElementById('student-school').textContent = s.school || '';
   document.getElementById('student-program').textContent = [s.program, s.className].filter(Boolean).join(' · ');
-  document.getElementById('student-contact').textContent = [s.phone, s.email].filter(Boolean).join(' · ');
+  document.getElementById('student-phone').textContent = s.phone || '—';
+  document.getElementById('student-email').textContent = s.email || '—';
   document.getElementById('student-schedule').textContent = s.scheduleShort || '';
 
   // Attendance
@@ -644,8 +661,12 @@ function renderSatTable(rows){
     return;
   }
   let html = '<table class="score-table"><thead><tr><th>Тест</th><th>Нийт оноо</th><th>Англи хэл</th><th>Мат</th></tr></thead><tbody>';
-  rows.forEach(r=>{
-    html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td><td>'+esc(r.Total)+'</td><td>'+esc(r.EnglishScore)+'</td><td>'+esc(r.MathScore)+'</td></tr>';
+  rows.forEach((r,i)=>{
+    const prev = i > 0 ? rows[i-1] : null;
+    html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td>'
+      + '<td>'+esc(r.Total)+(prev?deltaHtml(r.Total, prev.Total):'')+'</td>'
+      + '<td>'+esc(r.EnglishScore)+(prev?deltaHtml(r.EnglishScore, prev.EnglishScore):'')+'</td>'
+      + '<td>'+esc(r.MathScore)+(prev?deltaHtml(r.MathScore, prev.MathScore):'')+'</td></tr>';
   });
   html += '</tbody></table>';
   wrap.innerHTML = html;
@@ -661,32 +682,69 @@ function renderIeltsTable(rows){
   const skills = [['Reading','Унших'],['Listening','Сонсох'],['Speaking','Ярих'],['Writing','Бичих']];
   let html = '<table class="score-table"><thead><tr><th>Ур чадвар</th>' + testNames.map(t=>'<th>'+esc(t)+'</th>').join('') + '</tr></thead><tbody>';
   skills.forEach(([key,label])=>{
-    html += '<tr><td>'+label+'</td>' + rows.map(r=>'<td>'+esc(r[key])+'</td>').join('') + '</tr>';
+    html += '<tr><td>'+label+'</td>' + rows.map((r,i)=>{
+      const prev = i > 0 ? rows[i-1] : null;
+      return '<td>'+esc(r[key])+(prev?deltaHtml(r[key], prev[key]):'')+'</td>';
+    }).join('') + '</tr>';
   });
-  html += '<tr class="total-row"><td>Нийт (Overall)</td>' + rows.map(r=>'<td>'+esc(r.Overall)+'</td>').join('') + '</tr>';
+  html += '<tr class="total-row"><td>Нийт (Overall)</td>' + rows.map((r,i)=>{
+    const prev = i > 0 ? rows[i-1] : null;
+    return '<td>'+esc(r.Overall)+(prev?deltaHtml(r.Overall, prev.Overall):'')+'</td>';
+  }).join('') + '</tr>';
   html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
+function deltaHtml(currRaw, prevRaw){
+  if(currRaw === '' || currRaw === undefined || currRaw === null) return '';
+  if(prevRaw === '' || prevRaw === undefined || prevRaw === null) return '';
+  const c = Number(currRaw), p = Number(prevRaw);
+  if(isNaN(c) || isNaN(p)) return '';
+  const diff = Math.round((c - p) * 10) / 10;
+  if(diff === 0) return '<div class="score-delta delta-flat">±0</div>';
+  const cls = diff > 0 ? 'delta-up' : 'delta-down';
+  const sign = diff > 0 ? '+' : '';
+  return '<div class="score-delta '+cls+'">'+sign+diff+'</div>';
+}
+
 function renderSatCharts(rows){
-  ['sat-rw-chart','sat-math-chart'].forEach(id=>{ if(charts[id]) charts[id].destroy(); });
-  const rwCanvas = document.getElementById('sat-rw-chart');
-  const mathCanvas = document.getElementById('sat-math-chart');
+  ['sat-skills-chart','sat-total-chart'].forEach(id=>{ if(charts[id]) charts[id].destroy(); });
+  const skillsCanvas = document.getElementById('sat-skills-chart');
+  const totalCanvas = document.getElementById('sat-total-chart');
   if(!rows || rows.length === 0){
-    rwCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
-    mathCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
+    skillsCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
+    totalCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
     return;
   }
   const labels = rows.map(r=>formatTestDate(r.TestName));
-  charts['sat-rw-chart'] = new Chart(rwCanvas, {
+  charts['sat-skills-chart'] = new Chart(skillsCanvas, {
     type:'bar',
-    data:{ labels, datasets:[{ data: rows.map(r=>r.EnglishScore), backgroundColor: COLORS.maroon, borderRadius:4 }] },
-    options: chartOpts(800)
+    data:{
+      labels,
+      datasets:[
+        { label:'Англи хэл', data: rows.map(r=>r.EnglishScore), backgroundColor: COLORS.maroon, borderRadius:4 },
+        { label:'Мат', data: rows.map(r=>r.MathScore), backgroundColor: COLORS.forest, borderRadius:4 }
+      ]
+    },
+    options: chartOpts(800, true)
   });
-  charts['sat-math-chart'] = new Chart(mathCanvas, {
-    type:'bar',
-    data:{ labels, datasets:[{ data: rows.map(r=>r.MathScore), backgroundColor: COLORS.forest, borderRadius:4 }] },
-    options: chartOpts(800)
+  charts['sat-total-chart'] = new Chart(totalCanvas, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Нийт оноо',
+        data: rows.map(r=>r.Total),
+        borderColor: COLORS.maroon,
+        backgroundColor:'rgba(196,21,28,0.08)',
+        fill:true,
+        tension:0.3,
+        borderWidth:2,
+        pointRadius:4,
+        pointBackgroundColor: COLORS.maroon
+      }]
+    },
+    options: chartOpts(1600, false)
   });
 }
 
@@ -750,8 +808,14 @@ function esc(v){
 function formatTestDate(v){
   if(!v) return '';
   const s = String(v);
-  const tIndex = s.indexOf('T');
-  return tIndex > -1 ? s.slice(0, tIndex) : s;
+  const datePart = s.indexOf('T') > -1 ? s.slice(0, s.indexOf('T')) : s;
+  const parts = datePart.split('-');
+  if(parts.length === 3){
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    if(!isNaN(month) && !isNaN(day)) return month + '/' + day;
+  }
+  return datePart;
 }
 </script>
 
