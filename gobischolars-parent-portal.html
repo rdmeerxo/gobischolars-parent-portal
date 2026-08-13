@@ -327,7 +327,7 @@
   .blurb-list:last-child{margin-bottom:0;}
   .blurb-list li{margin-bottom:3px;}
 
-  #sat-table-wrap, #ielts-table-wrap{
+  #sat-table-wrap, #ielts-table-wrap, #lang-table-wrap{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     margin-bottom:20px;
@@ -520,6 +520,30 @@
     line-height:1.5;
   }
 
+  .project-list{
+    display:grid;
+    gap:14px;
+  }
+  .project-card{
+    background:var(--white);
+    border:1px solid var(--card-line);
+    border-left:4px solid var(--maroon);
+    border-radius:16px;
+    padding:16px 18px;
+  }
+  .project-card .project-name{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .project-card .project-desc{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.55;
+    white-space:pre-line;
+  }
+
   .empty-state{
     font-size:13.5px;
     color:var(--ink-soft);
@@ -635,8 +659,14 @@
       </div>
     </section>
 
-    <section style="animation-delay:.1s">
-      <div class="section-head"><span class="eyebrow">02</span><h2>SAT шалгалтын оноо</h2></div>
+    <section style="animation-delay:.1s" id="schedule-section">
+      <div class="section-head"><span class="eyebrow">02</span><h2>Хичээлийн хуваарь</h2></div>
+      <div class="schedule-scroller" id="schedule-scroller"></div>
+      <div class="schedule-dots" id="schedule-dots"></div>
+    </section>
+
+    <section style="animation-delay:.15s">
+      <div class="section-head"><span class="eyebrow">03</span><h2>SAT шалгалтын оноо</h2></div>
       <div class="blurb"><b>Товч мэдээлэл:</b><div id="sat-blurb" class="blurb-content"></div></div>
       <div id="sat-table-wrap"></div>
       <div class="chart-grid">
@@ -645,21 +675,27 @@
       </div>
     </section>
 
-    <section style="animation-delay:.15s">
-      <div class="section-head"><span class="eyebrow">03</span><h2>IELTS шалгалтын оноо</h2></div>
+    <section style="animation-delay:.2s">
+      <div class="section-head"><span class="eyebrow">04</span><h2>IELTS шалгалтын оноо</h2></div>
       <div class="blurb"><b>Товч мэдээлэл:</b><div id="ielts-blurb" class="blurb-content"></div></div>
       <div id="ielts-table-wrap"></div>
       <div class="chart-card"><div class="chart-title">Дөрвөн ур чадвар</div><canvas id="ielts-chart"></canvas></div>
     </section>
 
-    <section style="animation-delay:.2s" id="schedule-section">
-      <div class="section-head"><span class="eyebrow">04</span><h2>Хичээлийн хуваарь</h2></div>
-      <div class="schedule-scroller" id="schedule-scroller"></div>
-      <div class="schedule-dots" id="schedule-dots"></div>
+    <section style="animation-delay:.25s">
+      <div class="section-head"><span class="eyebrow">05</span><h2>Хэлний урлагийн шалгалт</h2></div>
+      <div class="blurb"><b>Товч мэдээлэл:</b><div id="lang-blurb" class="blurb-content"></div></div>
+      <div id="lang-table-wrap"></div>
     </section>
 
-    <section style="animation-delay:.25s">
-      <div class="section-head"><span class="eyebrow">05</span><h2>Багш нарын тайлбар</h2></div>
+    <section style="animation-delay:.3s">
+      <div class="section-head"><span class="eyebrow">06</span><h2>Төсөл, судалгаа</h2></div>
+      <div class="blurb"><b>Товч мэдээлэл:</b><div id="project-blurb" class="blurb-content"></div></div>
+      <div class="project-list" id="project-wrap"></div>
+    </section>
+
+    <section style="animation-delay:.35s">
+      <div class="section-head"><span class="eyebrow">07</span><h2>Багш нарын тайлбар</h2></div>
       <div class="notes-grid" id="notes-wrap"></div>
     </section>
 
@@ -744,6 +780,9 @@ function renderReport(data){
   document.getElementById('att-excused').textContent = att.excused;
   document.getElementById('att-absent').textContent = att.absent;
 
+  // Schedule
+  renderSchedule(data.schedule, prog.scheduleImageUrl);
+
   // SAT
   document.getElementById('sat-blurb').innerHTML = formatBlurb(prog.satBlurb);
   renderSatTable(data.sat);
@@ -754,8 +793,13 @@ function renderReport(data){
   renderIeltsTable(data.ielts);
   renderIeltsChart(data.ielts);
 
-  // Schedule
-  renderSchedule(data.schedule, prog.scheduleImageUrl);
+  // Language Arts
+  document.getElementById('lang-blurb').innerHTML = formatBlurb(prog.langBlurb);
+  renderLangTable(data.lang);
+
+  // Project / Research
+  document.getElementById('project-blurb').innerHTML = formatBlurb(prog.projectBlurb);
+  renderProjects(data.projects);
 
   // Teacher notes
   renderNotes(data.teacherNotes);
@@ -812,6 +856,56 @@ function findPrevValidSat(rows, i){
     if(!satStatusLabel(rows[j])) return rows[j];
   }
   return null;
+}
+
+function renderLangTable(rows){
+  const wrap = document.getElementById('lang-table-wrap');
+  if(!rows || rows.length === 0){
+    wrap.innerHTML = '<div class="empty-state">Хэлний урлагийн шалгалтын мэдээлэл одоогоор орууагаагүй байна.</div>';
+    return;
+  }
+  let html = '<table class="score-table"><thead><tr><th>Тест</th><th>Оноо</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    const status = langStatusLabel(r);
+    if(status){
+      html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td><td><span class="absent-mark">'+esc(status)+'</span></td></tr>';
+      return;
+    }
+    const prev = findPrevValidLang(rows, i);
+    html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td>'
+      + '<td><span class="score-cell"><strong>'+esc(r.Score)+'</strong>'+(prev?deltaHtml(r.Score, prev.Score):'')+'</span></td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function langStatusLabel(r){
+  const fromColumn = readStatusColumn(r);
+  if(fromColumn) return fromColumn;
+  const v = r.Score;
+  if(v === '' || v === null || v === undefined) return null;
+  return Number(v) === 0 ? 'Тасалсан' : null;
+}
+
+function findPrevValidLang(rows, i){
+  for(let j = i - 1; j >= 0; j--){
+    if(!langStatusLabel(rows[j])) return rows[j];
+  }
+  return null;
+}
+
+function renderProjects(rows){
+  const wrap = document.getElementById('project-wrap');
+  if(!rows || rows.length === 0){
+    wrap.innerHTML = '<div class="empty-state">Төсөл, судалгааны мэдээлэл одоогоор орууулаагүй байна.</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(p => (
+    '<div class="project-card">' +
+      '<div class="project-name">'+esc(p.ProjectName)+'</div>' +
+      '<div class="project-desc">'+esc(p.ProjectDescription)+'</div>' +
+    '</div>'
+  )).join('');
 }
 
 function renderIeltsTable(rows){
