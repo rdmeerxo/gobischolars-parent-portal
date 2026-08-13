@@ -731,7 +731,7 @@
     <section style="animation-delay:.4s">
       <div class="section-head"><span class="eyebrow">08</span><h2>Холбоо барих</h2></div>
       <div class="contact-card">
-        <p class="contact-message">Асуух зүйл, тусламж хэрэгтэй үед бидэнтэй чөлөөтэй холбогдоорой. Таны хүүхдийг их сургуульд элсэх замд хамтдаа алхацгаая.</p>
+        <p class="contact-message">Асуух зүйл, тусламж хэрэгтэй үед бидэнтэй чөлөөтэй холбогдоорой. Таны хүүхдийн мөрөөдлийн их сургуульдаа элсэх замд хамтдаа алхацгаая.</p>
         <div class="contact-links">
           <a class="contact-link" href="mailto:info@gobischolars.com">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v12H3V6z" stroke="currentColor" stroke-width="1.6"/><path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -891,14 +891,7 @@ function readStatusColumn(r){
 }
 
 function satStatusLabel(r){
-  const fromColumn = readStatusColumn(r);
-  if(fromColumn) return fromColumn;
-  const allZero = ['Total','EnglishScore','MathScore'].every(k => {
-    const v = r[k];
-    if(v === '' || v === null || v === undefined) return false;
-    return Number(v) === 0;
-  });
-  return allZero ? 'Тасалсан' : null;
+  return readStatusColumn(r);
 }
 
 function findPrevValidSat(rows, i){
@@ -930,11 +923,7 @@ function renderLangTable(rows){
 }
 
 function langStatusLabel(r){
-  const fromColumn = readStatusColumn(r);
-  if(fromColumn) return fromColumn;
-  const v = r.Score;
-  if(v === '' || v === null || v === undefined) return null;
-  return Number(v) === 0 ? 'Тасалсан' : null;
+  return readStatusColumn(r);
 }
 
 function findPrevValidLang(rows, i){
@@ -987,18 +976,10 @@ function renderIeltsTable(rows){
 
 // Returns a Mongolian status label ('Чөлөөтэй' / 'Тасалсан') if this test row
 // should be treated as no-score, or null if it has a real score.
-// Reads the "Status" column first (e.g. Excused/Absent, or Чөлөөтэй/Тасалсан).
-// Falls back to: all four skills explicitly entered as 0 = absent.
-// Blank/empty cells are NOT treated as absent (that just means not entered yet).
+// Reads the "Status" column only (e.g. Excused/Absent, or Чөлөөтэй/Тасалсан).
+// A real score of 0 is NOT treated as absent — only an explicit Status is.
 function ieltsStatusLabel(r){
-  const fromColumn = readStatusColumn(r);
-  if(fromColumn) return fromColumn;
-  const allZero = ['Reading','Listening','Speaking','Writing'].every(k => {
-    const v = r[k];
-    if(v === '' || v === null || v === undefined) return false;
-    return Number(v) === 0;
-  });
-  return allZero ? 'Тасалсан' : null;
+  return readStatusColumn(r);
 }
 
 function isAbsentIelts(r){
