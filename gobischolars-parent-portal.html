@@ -327,15 +327,20 @@
   .blurb-list:last-child{margin-bottom:0;}
   .blurb-list li{margin-bottom:3px;}
 
+  #sat-table-wrap, #ielts-table-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    margin-bottom:20px;
+    border-radius:16px;
+  }
   table.score-table{
     width:100%;
+    min-width:480px;
     border-collapse:separate;
     border-spacing:0;
-    margin-bottom:20px;
     font-size:14px;
     border:1px solid var(--card-line);
     border-radius:16px;
-    overflow:hidden;
   }
   table.score-table th{
     background:var(--maroon);
@@ -390,7 +395,7 @@
     margin-bottom:10px;
     color:var(--ink-soft);
   }
-  .chart-card canvas{max-height:220px;}
+  .chart-card canvas{max-height:220px; max-width:100%;}
 
   .schedule-img{
     width:100%;
@@ -616,8 +621,8 @@ async function handleLookup(){
       errEl.textContent = 'Код олдсонгүй. Багштайгаа холбогдож кодоо шалгаарай.';
       return;
     }
-    renderReport(data);
     showScreen('report-screen');
+    renderReport(data);
   }catch(err){
     showScreen('login-screen');
     errEl.textContent = 'Холболтын алдаа гарлаа. Дахин оролдоно уу.';
