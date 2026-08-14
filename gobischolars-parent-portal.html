@@ -573,6 +573,71 @@
   .contact-link svg{flex-shrink:0; color:var(--maroon);}
   .contact-link:hover{color:var(--maroon);}
 
+  .official-score-card{
+    background:var(--white);
+    border:1px solid var(--card-line);
+    border-left:4px solid var(--maroon);
+    border-radius:20px;
+    padding:22px 24px;
+    margin-bottom:18px;
+  }
+  .official-score-label{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--maroon);
+    margin-bottom:4px;
+  }
+  .official-score-date{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    margin-bottom:18px;
+  }
+  .official-overall{
+    text-align:center;
+    margin-bottom:20px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--card-line);
+  }
+  .official-overall-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:42px;
+    font-weight:700;
+    color:var(--maroon);
+    line-height:1;
+  }
+  .official-overall-label{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-top:6px;
+  }
+  .official-skills-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+  .official-skill{
+    text-align:center;
+    background:var(--card);
+    border-radius:14px;
+    padding:12px 6px;
+  }
+  .official-skill-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:19px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .official-skill-label{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:3px;
+  }
+
   .empty-state{
     font-size:13.5px;
     color:var(--ink-soft);
@@ -605,6 +670,7 @@
     .att-card{padding:14px 8px;}
     .att-card .num{font-size:24px;}
     .chart-grid{grid-template-columns:1fr;}
+    .official-skills-grid{grid-template-columns:repeat(2,1fr);}
     .info-card{flex-direction:column; margin:20px 16px 0;}
     .info-photo{
       flex:none;
@@ -706,9 +772,13 @@
 
     <section style="animation-delay:.2s">
       <div class="section-head"><span class="eyebrow">04</span><h2>IELTS шалгалтын оноо</h2></div>
-      <div class="blurb"><b>Товч мэдээлэл:</b><div id="ielts-blurb" class="blurb-content"></div></div>
-      <div id="ielts-table-wrap"></div>
-      <div class="chart-card"><div class="chart-title">Дөрвөн ур чадвар</div><canvas id="ielts-chart"></canvas></div>
+      <div id="ielts-notaking-wrap"></div>
+      <div id="ielts-official-wrap"></div>
+      <div id="ielts-mock-content">
+        <div class="blurb"><b>Товч мэдээлэл:</b><div id="ielts-blurb" class="blurb-content"></div></div>
+        <div id="ielts-table-wrap"></div>
+        <div class="chart-card"><div class="chart-title">Дөрвөн ур чадвар</div><canvas id="ielts-chart"></canvas></div>
+      </div>
     </section>
 
     <section style="animation-delay:.25s">
@@ -839,9 +909,7 @@ function renderReport(data){
   renderSatCharts(data.sat);
 
   // IELTS
-  document.getElementById('ielts-blurb').innerHTML = formatBlurb(prog.ieltsBlurb);
-  renderIeltsTable(data.ielts);
-  renderIeltsChart(data.ielts);
+  renderIeltsSection(data.ielts, prog.ieltsBlurb);
 
   // Language Arts
   document.getElementById('lang-blurb').innerHTML = formatBlurb(prog.langBlurb);
@@ -945,6 +1013,56 @@ function renderProjects(rows){
       '<div class="project-desc">'+esc(p.ProjectDescription)+'</div>' +
     '</div>'
   )).join('');
+}
+
+// Decides which of three views to show: a "not taking IELTS" message,
+// a clean official-score card, or the mock-test tracking table+chart.
+// NotTaking wins over everything if present, then Official, then mock.
+function renderIeltsSection(rows, blurb){
+  const notakingWrap = document.getElementById('ielts-notaking-wrap');
+  const officialWrap = document.getElementById('ielts-official-wrap');
+  const mockContent = document.getElementById('ielts-mock-content');
+
+  const notakingRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'notaking');
+  const officialRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'official');
+
+  notakingWrap.style.display = 'none';
+  notakingWrap.innerHTML = '';
+  officialWrap.style.display = 'none';
+  officialWrap.innerHTML = '';
+  mockContent.style.display = 'none';
+
+  if(notakingRow){
+    notakingWrap.innerHTML = '<div class="blurb"><p style="margin:0;">Уг сурагч ойрын хугацаанд IELTS шалгалт өгөхгүй гэдгээ мэдэгдсэн байна.</p></div>';
+    notakingWrap.style.display = '';
+  } else if(officialRow){
+    officialWrap.innerHTML = renderOfficialCard(officialRow);
+    officialWrap.style.display = '';
+  } else {
+    mockContent.style.display = '';
+    document.getElementById('ielts-blurb').innerHTML = formatBlurb(blurb);
+    renderIeltsTable(rows);
+    renderIeltsChart(rows);
+  }
+}
+
+function renderOfficialCard(r){
+  return (
+    '<div class="official-score-card">' +
+      '<div class="official-score-label">Албан ёсны IELTS оноо</div>' +
+      '<div class="official-score-date">'+esc(formatTestDate(r.TestName))+'</div>' +
+      '<div class="official-overall">' +
+        '<div class="official-overall-num">'+esc(r.Overall)+'</div>' +
+        '<div class="official-overall-label">Нийт (Overall)</div>' +
+      '</div>' +
+      '<div class="official-skills-grid">' +
+        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Reading)+'</div><div class="official-skill-label">Унших</div></div>' +
+        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Listening)+'</div><div class="official-skill-label">Сонсох</div></div>' +
+        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Speaking)+'</div><div class="official-skill-label">Ярих</div></div>' +
+        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Writing)+'</div><div class="official-skill-label">Бичих</div></div>' +
+      '</div>' +
+    '</div>'
+  );
 }
 
 function renderIeltsTable(rows){
