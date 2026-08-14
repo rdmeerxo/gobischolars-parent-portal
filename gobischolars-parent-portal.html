@@ -1023,7 +1023,7 @@ function renderIeltsSection(rows, blurb){
   const officialWrap = document.getElementById('ielts-official-wrap');
   const mockContent = document.getElementById('ielts-mock-content');
 
-  const notakingRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'notaking');
+  const notakingRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'nottaking');
   const officialRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'official');
 
   notakingWrap.style.display = 'none';
