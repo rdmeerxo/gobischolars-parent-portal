@@ -2,9 +2,10 @@
 <html lang="mn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GobiScholars Academy — Эцэг эхийн тайлан</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GobiScholars Academy — Эцэг эхийн портал</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -693,6 +694,31 @@
     section{animation:none;opacity:1;transform:none;}
     .spinner{animation:none;}
   }
+
+  /* ---------- additions for the new sections ---------- */
+  .attendance-grid.two{grid-template-columns:repeat(2,1fr);}
+  .att-card .sub{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .sq-row{display:flex;flex-wrap:wrap;gap:4px;margin:18px 0 6px;}
+  .sq-row i{display:block;width:12px;height:12px;border-radius:3px;background:var(--maroon);}
+  .note-line{font-size:13px;color:var(--ink-soft);margin:10px 0 0;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid;white-space:nowrap;}
+  .b-ok{color:#16A34A;border-color:#BBE5CB;background:#F0FBF4;}
+  .b-warn{color:#B45309;border-color:#F3D9A4;background:#FFF8EA;}
+  .b-info{color:#1D4ED8;border-color:#C7D7FB;background:#F2F6FF;}
+  .b-bad{color:var(--maroon);border-color:#F3C4C6;background:#FEF3F3;}
+  .b-mute{color:var(--ink-soft);border-color:var(--card-line);background:var(--card);}
+  .schedule-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  .schedule-grid .schedule-day-card{flex:none;max-width:none;width:100%;}
+  .schedule-day-card.today{border-color:var(--maroon);}
+  .bootcamp-card .official-overall{border:0;padding:0;margin-bottom:12px;}
+  .cell-sub{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:2px;font-weight:400;}
+  .kv{display:grid;grid-template-columns:max-content 1fr;gap:8px 18px;font-size:14px;margin:14px 0 0;}
+  .kv span:nth-child(odd){color:var(--ink-soft);font-size:12px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;padding-top:1px;}
+  .demo-box{margin-top:22px;padding-top:16px;border-top:1px solid var(--card-line);font-size:12.5px;color:var(--ink-soft);}
+  .demo-box button{margin:8px 4px 0;padding:8px 14px;border-radius:999px;border:1px solid var(--card-line);background:var(--white);color:var(--maroon);font-family:'Poppins',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;}
+  .info-photo img.photo-badge{display:block;}
+  @media (min-width:700px){.schedule-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:600px){.attendance-grid.two{gap:8px;}}
 </style>
 </head>
 <body>
@@ -724,13 +750,12 @@
 </div>
 
 <!-- ============ REPORT SCREEN ============ -->
+<!-- ============ REPORT SCREEN ============ -->
 <div id="report-screen">
   <div class="info-card">
-    <div class="info-photo">
-      <img id="photo-badge" class="photo-badge" src="" alt="">
-    </div>
+    <div class="info-photo" id="info-photo"></div>
     <div class="info-details">
-      <p class="eyebrow">Summer Scholars · GobiScholars Academy</p>
+      <p class="eyebrow" id="student-eyebrow"></p>
       <h1 id="student-name"></h1>
       <ul class="info-list">
         <li><span class="info-label">Сургууль</span><span class="info-value" id="student-school"></span></li>
@@ -742,592 +767,370 @@
       <a class="back-link" onclick="goBack()">← Өөр код оруулах</a>
     </div>
   </div>
-
-  <div class="report-body">
-
-    <section style="animation-delay:.05s">
-      <div class="section-head"><span class="eyebrow">01</span><h2>Ирцийн мэдээлэл</h2></div>
-      <div class="attendance-grid">
-        <div class="att-card"><div class="num" id="att-attended">0</div><div class="label">Ирсэн өдөр</div></div>
-        <div class="att-card"><div class="num" id="att-excused">0</div><div class="label">Чөлөө авсан өдөр</div></div>
-        <div class="att-card"><div class="num" id="att-absent">0</div><div class="label">Тасалсан өдөр</div></div>
-      </div>
-    </section>
-
-    <section style="animation-delay:.1s" id="schedule-section">
-      <div class="section-head"><span class="eyebrow">02</span><h2>Хичээлийн хуваарь</h2></div>
-      <div class="schedule-scroller" id="schedule-scroller"></div>
-      <div class="schedule-dots" id="schedule-dots"></div>
-    </section>
-
-    <section style="animation-delay:.15s">
-      <div class="section-head"><span class="eyebrow">03</span><h2>SAT шалгалтын оноо</h2></div>
-      <div class="blurb"><b>Товч мэдээлэл:</b><div id="sat-blurb" class="blurb-content"></div></div>
-      <div id="sat-table-wrap"></div>
-      <div class="chart-grid">
-        <div class="chart-card"><div class="chart-title">Онооны задаргаа</div><canvas id="sat-skills-chart"></canvas></div>
-        <div class="chart-card"><div class="chart-title">Нийт оноо</div><canvas id="sat-total-chart"></canvas></div>
-      </div>
-    </section>
-
-    <section style="animation-delay:.2s">
-      <div class="section-head"><span class="eyebrow">04</span><h2>IELTS шалгалтын оноо</h2></div>
-      <div id="ielts-notaking-wrap"></div>
-      <div id="ielts-official-wrap"></div>
-      <div id="ielts-mock-content">
-        <div class="blurb"><b>Товч мэдээлэл:</b><div id="ielts-blurb" class="blurb-content"></div></div>
-        <div id="ielts-table-wrap"></div>
-        <div class="chart-card"><div class="chart-title">Дөрвөн ур чадвар</div><canvas id="ielts-chart"></canvas></div>
-      </div>
-    </section>
-
-    <section style="animation-delay:.25s">
-      <div class="section-head"><span class="eyebrow">05</span><h2>Хэлний урлагийн шалгалт</h2></div>
-      <div class="blurb"><b>Товч мэдээлэл:</b><div id="lang-blurb" class="blurb-content"></div></div>
-      <div id="lang-table-wrap"></div>
-    </section>
-
-    <section style="animation-delay:.3s">
-      <div class="section-head"><span class="eyebrow">06</span><h2>Төсөл, судалгаа</h2></div>
-      <div class="blurb"><b>Товч мэдээлэл:</b><div id="project-blurb" class="blurb-content"></div></div>
-      <div class="project-list" id="project-wrap"></div>
-    </section>
-
-    <section style="animation-delay:.35s">
-      <div class="section-head"><span class="eyebrow">07</span><h2>Багш нарын тайлбар</h2></div>
-      <div class="notes-grid" id="notes-wrap"></div>
-    </section>
-
-    <section style="animation-delay:.4s">
-      <div class="section-head"><span class="eyebrow">08</span><h2>Холбоо барих</h2></div>
-      <div class="contact-card">
-        <p class="contact-message">Асуух зүйл, тусламж хэрэгтэй үед бидэнтэй чөлөөтэй холбогдоорой. Таны хүүхдийн мөрөөдлийн их сургуульдаа элсэх замд хамтдаа алхацгаая.</p>
-        <div class="contact-links">
-          <a class="contact-link" href="mailto:info@gobischolars.com">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v12H3V6z" stroke="currentColor" stroke-width="1.6"/><path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            info@gobischolars.com
-          </a>
-          <a class="contact-link" href="tel:+97680531163">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            +976 8053 1163
-          </a>
-          <a class="contact-link" href="tel:+97695009123">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-            +976 9500 9123
-          </a>
-        </div>
-      </div>
-    </section>
-
-  </div>
+  <div class="report-body" id="report-body"></div>
 </div>
 
 <script>
 /* =======================================================================
-   REQUIRED SETUP:
-   Paste your deployed Apps Script Web App URL below (ends in /exec).
-   Deploy > New deployment > Web app > Execute as: Me > Who has access: Anyone
+   SETUP: paste your deployed Apps Script Web App URL (ends in /exec).
+   Leave it empty to see the page with demo data only.
    ======================================================================= */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwd1I59ccOezybhQ7n7gKX6V3dv6o4MER0Ki1feQXqTMa9ec0XqZWgOk3dOU4tBVsGNog/exec';
 
-const COLORS = { maroon:'#C4151C', accent:'#9CA3AF', forest:'#3F6B4F', line:'#E3E3E6' };
+/* Contact details shown to parents */
+const CONTACT = { email: 'info@gobischolars.com', phone: '+976 9500 9123' };
+
+const COLORS = { maroon: '#C4151C', accent: '#9CA3AF', forest: '#3F6B4F', line: '#E3E3E6' };
 let charts = {};
+const $ = id => document.getElementById(id);
 
-function showScreen(id){
-  ['login-screen','loading-screen','report-screen'].forEach(s=>{
-    document.getElementById(s).style.display = (s===id) ? (s==='loading-screen'?'flex':'block') : 'none';
-  });
+/* ---------------- helpers ---------------- */
+function esc(v) {
+  if (v === undefined || v === null) return '';
+  return String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-
-function goBack(){
-  document.getElementById('code-input').value = '';
-  document.getElementById('login-error').textContent = '';
-  showScreen('login-screen');
+const pad2 = n => String(n).padStart(2, '0');
+function mnDate(iso) {
+  if (!iso) return '';
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+  return isNaN(d) ? '' : (d.getMonth() + 1) + '-р сарын ' + d.getDate();
 }
-
-async function handleLookup(){
-  const code = document.getElementById('code-input').value.trim();
-  const errEl = document.getElementById('login-error');
-  errEl.textContent = '';
-  if(!code){ errEl.textContent = 'Сурагчийн кодоо оруулна уу.'; return; }
-  if(APPS_SCRIPT_URL.indexOf('PASTE_YOUR') === 0){
-    errEl.textContent = 'Систем тохируулагдаагүй байна. Админтай холбогдоно уу.';
-    return;
-  }
-
-  showScreen('loading-screen');
-  try{
-    const res = await fetch(APPS_SCRIPT_URL + '?code=' + encodeURIComponent(code));
-    const data = await res.json();
-    if(!data.success){
-      showScreen('login-screen');
-      errEl.textContent = 'Код олдсонгүй. Багштайгаа холбогдож кодоо шалгаарай.';
-      return;
-    }
-    showScreen('report-screen');
-    renderReport(data);
-  }catch(err){
-    showScreen('login-screen');
-    errEl.textContent = 'Холболтын алдаа гарлаа. Дахин оролдоно уу.';
-  }
+function formatTestDate(v) {
+  if (!v) return '';
+  const p = String(v).slice(0, 10).split('-');
+  if (p.length === 3 && !isNaN(parseInt(p[1], 10))) return parseInt(p[1], 10) + '/' + parseInt(p[2], 10);
+  return String(v);
 }
-
-document.getElementById('code-input').addEventListener('keydown', e=>{
-  if(e.key === 'Enter') handleLookup();
-});
-
-function renderReport(data){
-  const s = data.student, att = data.attendance, prog = data.program;
-
-  // Masthead
-  const photoEl = document.getElementById('photo-badge');
-  if(s.photoUrl){
-    photoEl.src = s.photoUrl;
-    photoEl.classList.remove('fallback');
-    photoEl.onerror = () => useInitialFallback(photoEl, s.name);
-  } else {
-    useInitialFallback(photoEl, s.name);
-  }
-  document.getElementById('student-name').textContent = s.name || '';
-  document.getElementById('student-school').textContent = s.school || '';
-  document.getElementById('student-program').textContent = [s.program, s.className].filter(Boolean).join(' · ');
-  document.getElementById('student-phone').textContent = s.phone || '—';
-  document.getElementById('student-email').textContent = s.email || '—';
-  document.getElementById('student-schedule').textContent = s.scheduleShort || '';
-
-  // Attendance
-  document.getElementById('att-attended').textContent = att.attended;
-  document.getElementById('att-excused').textContent = att.excused;
-  document.getElementById('att-absent').textContent = att.absent;
-
-  // Schedule
-  renderSchedule(data.schedule, prog.scheduleImageUrl);
-
-  // SAT
-  document.getElementById('sat-blurb').innerHTML = formatBlurb(prog.satBlurb);
-  renderSatTable(data.sat);
-  renderSatCharts(data.sat);
-
-  // IELTS
-  renderIeltsSection(data.ielts, prog.ieltsBlurb);
-
-  // Language Arts
-  document.getElementById('lang-blurb').innerHTML = formatBlurb(prog.langBlurb);
-  renderLangTable(data.lang);
-
-  // Project / Research
-  document.getElementById('project-blurb').innerHTML = formatBlurb(prog.projectBlurb);
-  renderProjects(data.projects);
-
-  // Teacher notes
-  renderNotes(data.teacherNotes);
+function fmtMin(m) {
+  m = Math.round(m || 0);
+  const h = Math.floor(m / 60), r = m % 60;
+  return (h ? h + ' цаг' : '') + (h && r ? ' ' : '') + (r || !h ? r + ' мин' : '');
 }
-
-function useInitialFallback(el, name){
-  el.outerHTML = '<div id="photo-badge" class="photo-fallback">'+ (name ? name.trim().charAt(0) : '?') +'</div>';
+function daysLeft(iso) {
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00'), t = new Date();
+  t.setHours(0, 0, 0, 0);
+  return Math.round((d - t) / 864e5);
 }
-
-function renderSatTable(rows){
-  const wrap = document.getElementById('sat-table-wrap');
-  if(!rows || rows.length === 0){
-    wrap.innerHTML = '<div class="empty-state">SAT сорилын мэдээлэл одоогоор орууагаагүй байна.</div>';
-    return;
-  }
-  let html = '<table class="score-table"><thead><tr><th>Тест</th><th>Нийт оноо</th><th>Англи хэл</th><th>Мат</th></tr></thead><tbody>';
-  rows.forEach((r,i)=>{
-    const status = satStatusLabel(r);
-    if(status){
-      html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td><td colspan="3"><span class="absent-mark">'+esc(status)+'</span></td></tr>';
-      return;
-    }
-    const prev = findPrevValidSat(rows, i);
-    html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td>'
-      + '<td><span class="score-cell"><strong>'+esc(r.Total)+'</strong>'+(prev?deltaHtml(r.Total, prev.Total):'')+'</span></td>'
-      + '<td><span class="score-cell">'+esc(r.EnglishScore)+(prev?deltaHtml(r.EnglishScore, prev.EnglishScore):'')+'</span></td>'
-      + '<td><span class="score-cell">'+esc(r.MathScore)+(prev?deltaHtml(r.MathScore, prev.MathScore):'')+'</span></td></tr>';
-  });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
-
-function readStatusColumn(r){
-  const status = String(r.Status || '').trim().toLowerCase();
-  if(!status) return null;
-  if(status.indexOf('чөлөө') > -1 || status === 'excused') return 'Чөлөөтэй';
-  if(status.indexOf('тасал') > -1 || status === 'absent') return 'Тасалсан';
-  return null;
-}
-
-function satStatusLabel(r){
-  return readStatusColumn(r);
-}
-
-function findPrevValidSat(rows, i){
-  for(let j = i - 1; j >= 0; j--){
-    if(!satStatusLabel(rows[j])) return rows[j];
-  }
-  return null;
-}
-
-function renderLangTable(rows){
-  const wrap = document.getElementById('lang-table-wrap');
-  if(!rows || rows.length === 0){
-    wrap.innerHTML = '<div class="empty-state">Хэлний урлагийн шалгалтын мэдээлэл одоогоор орууагаагүй байна.</div>';
-    return;
-  }
-  let html = '<table class="score-table"><thead><tr><th>Тест</th><th>Оноо</th></tr></thead><tbody>';
-  rows.forEach((r,i)=>{
-    const status = langStatusLabel(r);
-    if(status){
-      html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td><td><span class="absent-mark">'+esc(status)+'</span></td></tr>';
-      return;
-    }
-    const prev = findPrevValidLang(rows, i);
-    html += '<tr><td>'+esc(formatTestDate(r.TestName))+'</td>'
-      + '<td><span class="score-cell"><strong>'+esc(r.Score)+'</strong>'+(prev?deltaHtml(r.Score, prev.Score):'')+'</span></td></tr>';
-  });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
-
-function langStatusLabel(r){
-  return readStatusColumn(r);
-}
-
-function findPrevValidLang(rows, i){
-  for(let j = i - 1; j >= 0; j--){
-    if(!langStatusLabel(rows[j])) return rows[j];
-  }
-  return null;
-}
-
-function renderProjects(rows){
-  const wrap = document.getElementById('project-wrap');
-  if(!rows || rows.length === 0){
-    wrap.innerHTML = '<div class="empty-state">Төсөл, судалгааны мэдээлэл одоогоор орууулаагүй байна.</div>';
-    return;
-  }
-  wrap.innerHTML = rows.map(p => (
-    '<div class="project-card">' +
-      '<div class="project-name">'+esc(p.ProjectName)+'</div>' +
-      '<div class="project-desc">'+esc(p.ProjectDescription)+'</div>' +
-    '</div>'
-  )).join('');
-}
-
-// Decides which of three views to show: a "not taking IELTS" message,
-// a clean official-score card, or the mock-test tracking table+chart.
-// NotTaking wins over everything if present, then Official, then mock.
-function renderIeltsSection(rows, blurb){
-  const notakingWrap = document.getElementById('ielts-notaking-wrap');
-  const officialWrap = document.getElementById('ielts-official-wrap');
-  const mockContent = document.getElementById('ielts-mock-content');
-
-  const notakingRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'nottaking');
-  const officialRow = (rows || []).find(r => String(r.TestType || '').trim().toLowerCase() === 'official');
-
-  notakingWrap.style.display = 'none';
-  notakingWrap.innerHTML = '';
-  officialWrap.style.display = 'none';
-  officialWrap.innerHTML = '';
-  mockContent.style.display = 'none';
-
-  if(notakingRow){
-    notakingWrap.innerHTML = '<div class="blurb"><p style="margin:0;">Уг сурагч ойрын хугацаанд IELTS шалгалт өгөхгүй гэдгээ мэдэгдсэн байна.</p></div>';
-    notakingWrap.style.display = '';
-  } else if(officialRow){
-    officialWrap.innerHTML = renderOfficialCard(officialRow);
-    officialWrap.style.display = '';
-  } else {
-    mockContent.style.display = '';
-    document.getElementById('ielts-blurb').innerHTML = formatBlurb(blurb);
-    renderIeltsTable(rows);
-    renderIeltsChart(rows);
-  }
-}
-
-function renderOfficialCard(r){
-  return (
-    '<div class="official-score-card">' +
-      '<div class="official-score-label">Албан ёсны IELTS оноо</div>' +
-      '<div class="official-score-date">'+esc(formatTestDate(r.TestName))+'</div>' +
-      '<div class="official-overall">' +
-        '<div class="official-overall-num">'+esc(r.Overall)+'</div>' +
-        '<div class="official-overall-label">Нийт (Overall)</div>' +
-      '</div>' +
-      '<div class="official-skills-grid">' +
-        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Reading)+'</div><div class="official-skill-label">Унших</div></div>' +
-        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Listening)+'</div><div class="official-skill-label">Сонсох</div></div>' +
-        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Speaking)+'</div><div class="official-skill-label">Ярих</div></div>' +
-        '<div class="official-skill"><div class="official-skill-num">'+esc(r.Writing)+'</div><div class="official-skill-label">Бичих</div></div>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
-function renderIeltsTable(rows){
-  const wrap = document.getElementById('ielts-table-wrap');
-  if(!rows || rows.length === 0){
-    wrap.innerHTML = '<div class="empty-state">IELTS сорилын мэдээлэл одоогоор орууагаагүй байна.</div>';
-    return;
-  }
-  const testNames = rows.map(r=>formatTestDate(r.TestName));
-  const skills = [['Reading','Унших'],['Listening','Сонсох'],['Speaking','Ярих'],['Writing','Бичих']];
-  let html = '<table class="score-table"><thead><tr><th>Ур чадвар</th>' + testNames.map(t=>'<th>'+esc(t)+'</th>').join('') + '</tr></thead><tbody>';
-  skills.forEach(([key,label])=>{
-    html += '<tr><td>'+label+'</td>' + rows.map((r,i)=>{
-      const status = ieltsStatusLabel(r);
-      if(status) return '<td><span class="absent-mark">'+esc(status)+'</span></td>';
-      const prev = findPrevValidIelts(rows, i);
-      return '<td><span class="score-cell">'+esc(r[key])+(prev?deltaHtml(r[key], prev[key]):'')+'</span></td>';
-    }).join('') + '</tr>';
-  });
-  html += '<tr class="total-row"><td>Нийт (Overall)</td>' + rows.map((r,i)=>{
-    const status = ieltsStatusLabel(r);
-    if(status) return '<td><span class="absent-mark">'+esc(status)+'</span></td>';
-    const prev = findPrevValidIelts(rows, i);
-    return '<td><span class="score-cell"><strong>'+esc(r.Overall)+'</strong>'+(prev?deltaHtml(r.Overall, prev.Overall):'')+'</span></td>';
-  }).join('') + '</tr>';
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
-
-// Returns a Mongolian status label ('Чөлөөтэй' / 'Тасалсан') if this test row
-// should be treated as no-score, or null if it has a real score.
-// Reads the "Status" column only (e.g. Excused/Absent, or Чөлөөтэй/Тасалсан).
-// A real score of 0 is NOT treated as absent — only an explicit Status is.
-function ieltsStatusLabel(r){
-  return readStatusColumn(r);
-}
-
-function isAbsentIelts(r){
-  return !!ieltsStatusLabel(r);
-}
-
-function findPrevValidIelts(rows, i){
-  for(let j = i - 1; j >= 0; j--){
-    if(!isAbsentIelts(rows[j])) return rows[j];
-  }
-  return null;
-}
-
-function deltaHtml(currRaw, prevRaw){
-  if(currRaw === '' || currRaw === undefined || currRaw === null) return '';
-  if(prevRaw === '' || prevRaw === undefined || prevRaw === null) return '';
+const badge = (cls, text) => `<span class="badge b-${cls}">${esc(text)}</span>`;
+function deltaHtml(currRaw, prevRaw) {
+  if (currRaw === '' || currRaw == null || prevRaw === '' || prevRaw == null) return '';
   const c = Number(currRaw), p = Number(prevRaw);
-  if(isNaN(c) || isNaN(p)) return '';
+  if (isNaN(c) || isNaN(p)) return '';
   const diff = Math.round((c - p) * 10) / 10;
-  if(diff === 0) return '<span class="score-delta delta-flat">±0</span>';
-  const cls = diff > 0 ? 'delta-up' : 'delta-down';
-  const sign = diff > 0 ? '+' : '';
-  return '<span class="score-delta '+cls+'">'+sign+diff+'</span>';
+  if (diff === 0) return '<span class="score-delta delta-flat">±0</span>';
+  return `<span class="score-delta ${diff > 0 ? 'delta-up' : 'delta-down'}">${diff > 0 ? '+' : ''}${diff}</span>`;
 }
-
-function renderSatCharts(rows){
-  ['sat-skills-chart','sat-total-chart'].forEach(id=>{ if(charts[id]) charts[id].destroy(); });
-  const skillsCanvas = document.getElementById('sat-skills-chart');
-  const totalCanvas = document.getElementById('sat-total-chart');
-  if(!rows || rows.length === 0){
-    skillsCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
-    totalCanvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
-    return;
-  }
-  const labels = rows.map(r=>formatTestDate(r.TestName));
-  charts['sat-skills-chart'] = new Chart(skillsCanvas, {
-    type:'bar',
-    data:{
-      labels,
-      datasets:[
-        { label:'Англи хэл', data: rows.map(r=> satStatusLabel(r) ? null : r.EnglishScore), backgroundColor: COLORS.maroon, borderRadius:4 },
-        { label:'Мат', data: rows.map(r=> satStatusLabel(r) ? null : r.MathScore), backgroundColor: COLORS.accent, borderRadius:4 }
-      ]
-    },
-    options: chartOpts(800, true)
-  });
-  charts['sat-total-chart'] = new Chart(totalCanvas, {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{
-        label:'Нийт оноо',
-        data: rows.map(r=> satStatusLabel(r) ? null : r.Total),
-        borderColor: COLORS.maroon,
-        backgroundColor:'rgba(196,21,28,0.08)',
-        fill:true,
-        tension:0.3,
-        borderWidth:2,
-        pointRadius:4,
-        pointBackgroundColor: COLORS.maroon
-      }]
-    },
-    options: chartOpts(1600, false, 800)
-  });
-}
-
-function renderIeltsChart(rows){
-  if(charts['ielts-chart']) charts['ielts-chart'].destroy();
-  const canvas = document.getElementById('ielts-chart');
-  if(!rows || rows.length === 0){
-    canvas.parentElement.innerHTML = '<div class="empty-state">Мэдээлэл алга</div>';
-    return;
-  }
-  const skillLabels = ['Ярих','Сонсох','Бичих','Унших'];
-  const skillKeys = ['Speaking','Listening','Writing','Reading'];
-  const palette = ['#C4151C', '#9CA3AF', '#93C5FD', '#F9A8D4'];
-  charts['ielts-chart'] = new Chart(canvas, {
-    type:'bar',
-    data:{
-      labels: skillLabels,
-      datasets: rows.map((r,i)=>({
-        label: formatTestDate(r.TestName) + (ieltsStatusLabel(r) ? ' (' + ieltsStatusLabel(r) + ')' : ''),
-        data: skillKeys.map(k => isAbsentIelts(r) ? null : r[k]),
-        backgroundColor: palette[i % palette.length],
-        borderRadius:4
-      }))
-    },
-    options: chartOpts(9, true)
-  });
-}
-
-function chartOpts(max, showLegend, min){
-  return {
-    responsive:true,
-    maintainAspectRatio:true,
-    plugins:{ legend:{ display: !!showLegend, position:'top', labels:{ font:{ family:'Poppins', size:11 }, color:'#6B7280', boxWidth:12 } } },
-    scales:{
-      y:{ beginAtZero: min === undefined, min: min, max:max, grid:{ color:'#F0F0F1', drawBorder:false }, ticks:{ font:{ family:'IBM Plex Mono', size:10 }, color:'#9CA3AF' } },
-      x:{ grid:{ display:false, drawBorder:false }, ticks:{ font:{ family:'Poppins', size:11 }, color:'#6B7280' } }
-    }
-  };
-}
-
-const NO_CLASS_TEXT = 'Энэ өдөр заавал ирэх хичээл байхгүй. Оффис цаг болон зөвлөгөөний цаг нээлттэй байна.';
-
-function renderSchedule(scheduleDays, fallbackImageUrl){
-  const scroller = document.getElementById('schedule-scroller');
-  const dotsWrap = document.getElementById('schedule-dots');
-
-  const hasAnyBlocks = Array.isArray(scheduleDays) && scheduleDays.some(d => d.blocks && d.blocks.length);
-
-  if(!scheduleDays || scheduleDays.length === 0 || !hasAnyBlocks){
-    dotsWrap.innerHTML = '';
-    if(fallbackImageUrl){
-      scroller.outerHTML = '<img class="schedule-img" id="schedule-scroller" src="'+fallbackImageUrl+'" alt="Хичээлийн хуваарь">';
-    } else {
-      scroller.outerHTML = '<div class="empty-state" id="schedule-scroller">Хичээлийн хуваарь одоогоор орууулаагүй байна.</div>';
-    }
-    return;
-  }
-
-  const jsDay = new Date().getDay(); // 0=Sun..6=Sat
-  const todayIndex = jsDay === 0 ? 6 : jsDay - 1; // 0=Mon..6=Sun, matching WEEKDAYS order
-
-  scroller.innerHTML = scheduleDays.map((d,i) => {
-    const isToday = i === todayIndex;
-    const blocksHtml = (d.blocks && d.blocks.length)
-      ? d.blocks.map(b =>
-          '<div class="schedule-block">' +
-            '<div class="schedule-time">'+esc(b.start)+'–'+esc(b.end)+'</div>' +
-            '<div class="schedule-subject">'+esc(b.subject)+'</div>' +
-          '</div>'
-        ).join('')
-      : '<div class="schedule-empty">'+esc(NO_CLASS_TEXT)+'</div>';
-    return (
-      '<div class="schedule-day-card">' +
-        '<div class="schedule-day-head">' +
-          '<span class="schedule-day-name">'+esc(d.day)+'</span>' +
-          (isToday ? '<span class="schedule-today-badge">Өнөөдөр</span>' : '') +
-        '</div>' +
-        blocksHtml +
-      '</div>'
-    );
-  }).join('');
-
-  dotsWrap.innerHTML = scheduleDays.map((_,i) =>
-    '<span class="schedule-dot'+(i===0?' active':'')+'"></span>'
-  ).join('');
-
-  let scrollTicking = false;
-  scroller.onscroll = function(){
-    if(scrollTicking) return;
-    scrollTicking = true;
-    requestAnimationFrame(() => {
-      const cards = scroller.querySelectorAll('.schedule-day-card');
-      const dots = dotsWrap.querySelectorAll('.schedule-dot');
-      let closest = 0;
-      let closestDist = Infinity;
-      cards.forEach((card, i) => {
-        const dist = Math.abs(card.offsetLeft - scroller.scrollLeft);
-        if(dist < closestDist){ closestDist = dist; closest = i; }
-      });
-      dots.forEach((dot,i) => dot.classList.toggle('active', i === closest));
-      scrollTicking = false;
-    });
-  };
-}
-
-function renderNotes(notes){
-  const wrap = document.getElementById('notes-wrap');
-  if(!notes || notes.length === 0){
-    wrap.innerHTML = '<div class="empty-state">Багшийн тайлбар одоогоор орууулаагүй байна.</div>';
-    return;
-  }
-  wrap.innerHTML = notes.map(n => (
-    '<div class="note-card">' +
-      '<div class="role">'+esc(n.TeacherRole)+'</div>' +
-      '<div class="teacher">'+esc(n.TeacherName)+'</div>' +
-      '<div class="text">'+esc(n.Note)+'</div>' +
-    '</div>'
-  )).join('');
-}
-
-function esc(v){
-  if(v === undefined || v === null) return '';
-  return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-// Splits blurb text on line breaks. Any line starting with "-" or "•"
-// becomes a bullet in a real <ul>; everything else becomes a paragraph.
-// To make part of a blurb a list in the sheet, put each item on its own
-// line inside the cell (Alt+Enter on Windows / Option+Return on Mac) and
-// start that line with "- ".
-function formatBlurb(text){
-  if(!text) return '';
-  const lines = String(text).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  if(lines.length === 1) return '<p>'+esc(lines[0])+'</p>';
-  let html = '';
-  let listItems = [];
-  const flush = () => {
-    if(listItems.length){
-      html += '<ul class="blurb-list">' + listItems.map(li=>'<li>'+esc(li)+'</li>').join('') + '</ul>';
-      listItems = [];
-    }
-  };
-  lines.forEach(line=>{
-    const bullet = line.match(/^[-•]\s*(.+)$/);
-    if(bullet){
-      listItems.push(bullet[1]);
-    } else {
-      flush();
-      html += '<p>'+esc(line)+'</p>';
-    }
-  });
+function formatBlurb(text) {
+  if (!text) return '';
+  const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length === 1) return '<p>' + esc(lines[0]) + '</p>';
+  let html = '', items = [];
+  const flush = () => { if (items.length) { html += '<ul class="blurb-list">' + items.map(li => '<li>' + esc(li) + '</li>').join('') + '</ul>'; items = []; } };
+  lines.forEach(line => { const b = line.match(/^[-•]\s*(.+)$/); if (b) items.push(b[1]); else { flush(); html += '<p>' + esc(line) + '</p>'; } });
   flush();
   return html;
 }
-
-function formatTestDate(v){
-  if(!v) return '';
-  const s = String(v);
-  const datePart = s.indexOf('T') > -1 ? s.slice(0, s.indexOf('T')) : s;
-  const parts = datePart.split('-');
-  if(parts.length === 3){
-    const month = parseInt(parts[1], 10);
-    const day = parseInt(parts[2], 10);
-    if(!isNaN(month) && !isNaN(day)) return month + '/' + day;
-  }
-  return datePart;
+const blurbBox = t => t ? `<div class="blurb"><b>Товч мэдээлэл:</b><div class="blurb-content">${formatBlurb(t)}</div></div>` : '';
+const empty = t => `<div class="empty-state">${esc(t)}</div>`;
+function chartOpts(max, showLegend, min) {
+  return {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: !!showLegend, position: 'top', labels: { font: { family: 'Poppins', size: 11 }, color: '#6B7280', boxWidth: 12 } } },
+    scales: {
+      y: { beginAtZero: min === undefined, min, max, grid: { color: '#F0F0F1', drawBorder: false }, ticks: { font: { family: 'IBM Plex Mono', size: 10 }, color: '#9CA3AF' } },
+      x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: 'Poppins', size: 11 }, color: '#6B7280' } }
+    }
+  };
 }
+function makeChart(id, config) {
+  const el = $(id); if (!el || typeof Chart === 'undefined') return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(el, config);
+}
+
+/* ---------------- screens + login ---------------- */
+function showScreen(id) {
+  ['login-screen', 'loading-screen', 'report-screen'].forEach(s => {
+    $(s).style.display = (s === id) ? (s === 'loading-screen' ? 'flex' : 'block') : 'none';
+  });
+}
+function goBack() { $('code-input').value = ''; $('login-error').textContent = ''; showScreen('login-screen'); window.scrollTo(0, 0); }
+
+async function fetchReport(code) {
+  if (!APPS_SCRIPT_URL) {
+    await new Promise(r => setTimeout(r, 250));
+    const d = DEMOS[code.toUpperCase()];
+    return d ? Object.assign({ success: true }, d) : { success: false };
+  }
+  const res = await fetch(APPS_SCRIPT_URL + '?code=' + encodeURIComponent(code));
+  return res.json();
+}
+async function handleLookup() {
+  const code = $('code-input').value.trim(), errEl = $('login-error');
+  errEl.textContent = '';
+  if (!code) { errEl.textContent = 'Сурагчийн кодоо оруулна уу.'; return; }
+  showScreen('loading-screen');
+  try {
+    const data = await fetchReport(code);
+    if (!data.success) { showScreen('login-screen'); errEl.textContent = 'Код олдсонгүй. Багштайгаа холбогдож кодоо шалгаарай.'; return; }
+    showScreen('report-screen'); renderReport(data); window.scrollTo(0, 0);
+  } catch (err) {
+    showScreen('login-screen'); errEl.textContent = 'Холболтын алдаа гарлаа. Дахин оролдоно уу.';
+  }
+}
+$('code-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleLookup(); });
+if (!APPS_SCRIPT_URL) {
+  const box = document.createElement('div');
+  box.className = 'demo-box';
+  box.innerHTML = 'Загвар үзэх (demo):<br><button type="button" data-d="DEMO1">Намрын сурагч</button><button type="button" data-d="DEMO2">12 Scholars</button><button type="button" data-d="DEMO3">Шинэ сурагч</button>';
+  $('login-error').after(box);
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { $('code-input').value = b.dataset.d; handleLookup(); });
+}
+
+/* ---------------- report ---------------- */
+function renderReport(d) {
+  const s = d.student || {};
+  $('info-photo').innerHTML = s.photoUrl
+    ? `<img class="photo-badge" src="${esc(s.photoUrl)}" alt="">`
+    : `<div class="photo-fallback">${esc((s.name || '?').trim().charAt(0))}</div>`;
+  const im = $('info-photo').querySelector('img');
+  if (im) im.onerror = () => { $('info-photo').innerHTML = `<div class="photo-fallback">${esc((s.name || '?').trim().charAt(0))}</div>`; };
+  $('student-eyebrow').textContent = (s.program ? s.program + ' · ' : '') + 'GobiScholars Academy';
+  $('student-name').textContent = s.name || '';
+  $('student-school').textContent = s.school || '—';
+  $('student-program').textContent = [s.program, s.className].filter(Boolean).join(' · ') || '—';
+  $('student-phone').textContent = s.phone || '—';
+  $('student-email').textContent = s.email || '—';
+  $('student-schedule').textContent = s.scheduleShort || '—';
+
+  const defs = [secAttendance, secSchedule, secCounseling, secBootcamp, secSat, secIelts, secLang, secCollege, secNotes, secContact]
+    .map(f => f(d)).filter(Boolean);
+  $('report-body').innerHTML = defs.map((x, i) =>
+    `<section style="animation-delay:${(i * 0.05).toFixed(2)}s"><div class="section-head"><span class="eyebrow">${pad2(i + 1)}</span><h2>${x.title}</h2></div>${x.html}</section>`).join('');
+  defs.forEach(x => x.after && x.after());
+}
+
+function secAttendance(d) {
+  const a = d.attendance || {}, at = a.attended || 0, ex = a.excused || 0, ab = a.absent || 0;
+  const html = (at + ex + ab) === 0 ? empty('Ирцийн мэдээлэл удахгүй орно.') : `<div class="attendance-grid">
+    <div class="att-card"><div class="num">${at}</div><div class="label">Ирсэн өдөр</div></div>
+    <div class="att-card"><div class="num">${ex}</div><div class="label">Чөлөө авсан өдөр</div></div>
+    <div class="att-card"><div class="num">${ab}</div><div class="label">Тасалсан өдөр</div></div></div>`;
+  return { title: 'Ирцийн мэдээлэл', html };
+}
+
+function secSchedule(d) {
+  const days = (d.schedule || []).filter(x => x.blocks && x.blocks.length);
+  if (!days.length) return { title: 'Хичээлийн хуваарь', html: empty('Хичээлийн хуваарь одоогоор оруулаагүй байна.') };
+  const names = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'], today = names[new Date().getDay()];
+  const html = '<div class="schedule-grid">' + days.map(x => `<div class="schedule-day-card${x.day === today ? ' today' : ''}">
+    <div class="schedule-day-head"><span class="schedule-day-name">${esc(x.day)}</span>${x.day === today ? '<span class="schedule-today-badge">Өнөөдөр</span>' : ''}</div>
+    ${x.blocks.map(b => `<div class="schedule-block"><div class="schedule-time">${esc(b.start)}–${esc(b.end)}</div><div class="schedule-subject">${esc(b.subject)}</div></div>`).join('')}</div>`).join('') + '</div>';
+  return { title: 'Хичээлийн хуваарь', html };
+}
+
+function secCounseling(d) {
+  const c = d.counseling; if (!c) return null;
+  const tot = c.totalMinutes || 0, n = c.sessions || 0;
+  if (!tot && !n) return { title: 'Зөвлөгөө', html: empty('Одоогоор ганцаарчилсан зөвлөгөө аваагүй байна.') };
+  const html = `<div class="attendance-grid two">
+      <div class="att-card"><div class="num">${esc(fmtMin(tot))}</div><div class="label">Нийт авсан зөвлөгөө</div></div>
+      <div class="att-card"><div class="num">${n}</div><div class="label">Зөвлөгөөний тоо</div></div></div>
+    <div class="sq-row" aria-hidden="true">${'<i></i>'.repeat(Math.min(n, 96))}</div>
+    <p class="note-line">Нэг зөвлөгөө 30 минут үргэлжилнэ. Нэг дөрвөлжин нь нэг зөвлөгөөг заана.</p>`;
+  return { title: 'Ганцаарчилсан зөвлөгөө', html };
+}
+
+function secBootcamp(d) {
+  const b = d.bootcamp; if (!b || !b.next || !b.next.start) return null;
+  const n = b.next, end = n.end || n.start, T = x => new Date(x + 'T00:00:00');
+  const s = T(n.start), e = T(end), days = Math.round((e - s) / 864e5) + 1, left = daysLeft(n.start), over = daysLeft(end) < 0;
+  const range = days > 1 ? s.getDate() + '–' + e.getDate() : String(s.getDate());
+  const cd = over ? badge('mute', 'Дууссан') : left > 0 ? badge('bad', left + ' хоног үлдсэн') : badge('ok', 'Явагдаж байна');
+  const html = `<div class="official-score-card bootcamp-card">
+      <div class="official-score-label">${over ? 'Сүүлийн Bootcamp' : 'Дараагийн Bootcamp'}</div>
+      <div class="official-score-date">${esc(mnDate(n.start))}${days > 1 ? (s.getMonth() === e.getMonth() ? '–' + e.getDate() : ' – ' + esc(mnDate(end))) : ''}</div>
+      <div class="official-overall"><div class="official-overall-num">${range}</div><div class="official-overall-label">${s.getMonth() + 1}-р сар · ${days} өдөр</div></div>
+      <div class="note-line" style="margin:0">${cd}${n.time ? `<span>Цаг: ${esc(n.time)}</span>` : ''}${n.location ? `<span>Байршил: ${esc(n.location)}</span>` : ''}</div>
+    </div>${blurbBox(b.blurb)}`;
+  return { title: 'Bootcamp', html };
+}
+
+function satRows(s) {
+  const r = [];
+  if (s.first && s.first.total) r.push(Object.assign({ label: 'Эхний дадлага', short: 'Эхний' }, s.first));
+  if (s.last && s.last.total) r.push(Object.assign({ label: 'Сүүлийн дадлага', short: 'Сүүлийн' }, s.last));
+  if (s.official && s.official.total) r.push(Object.assign({ label: 'Албан ёсны оноо', short: 'Албан ёсны', official: true }, s.official));
+  return r;
+}
+const STATUS = { 'Score received': ['ok', 'Оноо гарсан'], 'Retake scheduled': ['info', 'Дахин өгөхөөр товлосон'], 'Scheduled': ['info', 'Шалгалт товлосон'], 'Not taking': ['mute', 'Өгөхгүй'] };
+function statusLine(status, nextTest) {
+  const st = STATUS[status];
+  if (!st && !nextTest) return '';
+  return `<p class="note-line">${st ? badge(st[0], st[1]) : ''}${nextTest ? `<span>Дараагийн шалгалт: <b>${esc(mnDate(nextTest))}</b></span>` : ''}</p>`;
+}
+function secSat(d) {
+  const s = d.sat || {}, rows = satRows(s), prog = d.program || {};
+  let html = blurbBox(prog.satBlurb);
+  if (!rows.length) {
+    html += empty(s.status === 'Not taking' ? 'Уг сурагч SAT шалгалт өгөхгүй гэдгээ мэдэгдсэн байна.' : 'SAT шалгалтын мэдээлэл одоогоор оруулаагүй байна.') + statusLine(s.status === 'Not taking' ? '' : s.status, s.nextTest);
+    return { title: 'SAT шалгалтын оноо', html };
+  }
+  html += '<div id="sat-table-wrap"><table class="score-table"><thead><tr><th>Тест</th><th>Нийт оноо</th><th>Англи хэл</th><th>Мат</th></tr></thead><tbody>' +
+    rows.map((r, i) => { const p = rows[i - 1];
+      return `<tr><td>${esc(r.label)}<span class="cell-sub">${esc(formatTestDate(r.date))}</span></td>
+        <td><span class="score-cell"><strong>${r.total}</strong>${p ? deltaHtml(r.total, p.total) : ''}</span></td>
+        <td><span class="score-cell">${r.english ?? '–'}${p ? deltaHtml(r.english, p.english) : ''}</span></td>
+        <td><span class="score-cell">${r.math ?? '–'}${p ? deltaHtml(r.math, p.math) : ''}</span></td></tr>`; }).join('') + '</tbody></table></div>' +
+    statusLine(s.status, s.nextTest) +
+    `<div class="chart-grid" style="margin-top:16px"><div class="chart-card"><div class="chart-title">Онооны задаргаа</div><canvas id="sat-skills-chart"></canvas></div>
+     <div class="chart-card"><div class="chart-title">Нийт оноо</div><canvas id="sat-total-chart"></canvas></div></div>`;
+  return { title: 'SAT шалгалтын оноо', html, after() {
+    const labels = rows.map(r => r.short);
+    makeChart('sat-skills-chart', { type: 'bar', data: { labels, datasets: [
+      { label: 'Англи хэл', data: rows.map(r => r.english), backgroundColor: COLORS.maroon, borderRadius: 4 },
+      { label: 'Мат', data: rows.map(r => r.math), backgroundColor: COLORS.accent, borderRadius: 4 }] }, options: chartOpts(800, true) });
+    makeChart('sat-total-chart', { type: 'line', data: { labels, datasets: [{ label: 'Нийт оноо', data: rows.map(r => r.total), borderColor: COLORS.maroon, backgroundColor: 'rgba(196,21,28,0.08)', fill: true, tension: 0.3, borderWidth: 2, pointRadius: 4, pointBackgroundColor: COLORS.maroon }] }, options: chartOpts(1600, false, 800) });
+  } };
+}
+
+const SKILLS = [['reading', 'Унших'], ['listening', 'Сонсох'], ['speaking', 'Ярих'], ['writing', 'Бичих']];
+function secIelts(d) {
+  const t = d.ielts || {}, o = t.official, prog = d.program || {};
+  const mocks = (t.mocks || []).filter(m => m && m.overall).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  let html = blurbBox(prog.ieltsBlurb), after;
+  if (t.status === 'Not taking') {
+    html += '<div class="blurb"><p style="margin:0;">Уг сурагч ойрын хугацаанд IELTS шалгалт өгөхгүй гэдгээ мэдэгдсэн байна.</p></div>';
+  } else if (o && o.overall) {
+    html += `<div class="official-score-card"><div class="official-score-label">Албан ёсны IELTS оноо</div>
+      <div class="official-score-date">${esc(o.date ? mnDate(o.date) : '')}</div>
+      <div class="official-overall"><div class="official-overall-num">${Number(o.overall).toFixed(1)}</div><div class="official-overall-label">Нийт (Overall)</div></div>
+      <div class="official-skills-grid">${SKILLS.map(([k, l]) => `<div class="official-skill"><div class="official-skill-num">${o[k] != null && o[k] !== '' ? Number(o[k]).toFixed(1) : '–'}</div><div class="official-skill-label">${l}</div></div>`).join('')}</div></div>` + statusLine(t.status, t.nextTest);
+  } else if (mocks.length) {
+    html += '<div id="ielts-table-wrap"><table class="score-table"><thead><tr><th>Ур чадвар</th>' + mocks.map(m => `<th>${esc(formatTestDate(m.date))}</th>`).join('') + '</tr></thead><tbody>' +
+      SKILLS.map(([k, l]) => `<tr><td>${l}</td>` + mocks.map((m, i) => `<td><span class="score-cell">${m[k] != null ? Number(m[k]).toFixed(1) : '–'}${i ? deltaHtml(m[k], mocks[i - 1][k]) : ''}</span></td>`).join('') + '</tr>').join('') +
+      '<tr class="total-row"><td>Нийт (Overall)</td>' + mocks.map((m, i) => `<td><span class="score-cell"><strong>${Number(m.overall).toFixed(1)}</strong>${i ? deltaHtml(m.overall, mocks[i - 1].overall) : ''}</span></td>`).join('') + '</tr></tbody></table></div>' +
+      statusLine(t.status, t.nextTest) + '<div class="chart-card" style="margin-top:16px"><div class="chart-title">Дөрвөн ур чадвар</div><canvas id="ielts-chart"></canvas></div>';
+    after = () => makeChart('ielts-chart', { type: 'bar', data: { labels: SKILLS.map(x => x[1]), datasets: mocks.map((m, i) => ({ label: formatTestDate(m.date), data: SKILLS.map(([k]) => m[k]), backgroundColor: ['#C4151C', '#9CA3AF', '#93C5FD', '#F9A8D4'][i % 4], borderRadius: 4 })) }, options: chartOpts(9, true) });
+  } else {
+    html += empty('IELTS шалгалтын мэдээлэл одоогоор оруулаагүй байна.') + statusLine(t.status, t.nextTest);
+  }
+  return { title: 'IELTS шалгалтын оноо', html, after };
+}
+
+function secLang(d) {
+  const L = d.lang || []; if (!L.length) return null;
+  const prog = d.program || {};
+  const attM = { PRESENT: ['ok', 'Ирсэн'], ABSENT: ['bad', 'Тасалсан'], EXCUSED: ['info', 'Чөлөөтэй'] };
+  const taskM = { SUBMITTED: ['ok', 'Өгсөн'], MISSING: ['bad', 'Өгөөгүй'], EXCUSED: ['info', 'Чөлөөтэй'] };
+  const q = L.filter(w => w.quizMax);
+  const html = blurbBox(prog.langBlurb) + '<div id="lang-table-wrap"><table class="score-table"><thead><tr><th>Долоо хоног</th><th>Ирц</th><th>Сорилт</th><th>C.T.Q.</th><th>Даалгавар</th></tr></thead><tbody>' +
+    L.map((w, i) => { const a = attM[w.att] || ['mute', '–'], tk = w.task ? (taskM[w.taskStatus] || ['mute', '–']) : null;
+      return `<tr><td>${w.week}-р долоо хоног<span class="cell-sub">${esc(w.unit)}</span></td><td>${badge(a[0], a[1])}</td>
+        <td>${w.quizMax ? `<strong>${w.quiz ?? 0}</strong> / ${w.quizMax}` : '–'}</td><td>${w.ctqMax ? `${w.ctq ?? 0} / ${w.ctqMax}` : '–'}</td>
+        <td>${tk ? badge(tk[0], tk[1]) + `<span class="cell-sub">${esc(w.task)}</span>` : '–'}</td></tr>`; }).join('') + '</tbody></table></div>' +
+    (q.length ? '<div class="chart-card"><div class="chart-title">Долоо хоног бүрийн сорилт (%)</div><canvas id="lang-chart"></canvas></div>' : '');
+  return { title: 'Англи Уран Зохиолын хичээл', html, after: q.length ? () => makeChart('lang-chart', { type: 'bar',
+    data: { labels: q.map(w => w.week + '-р д.х'), datasets: [{ label: 'Сорилт (%)', data: q.map(w => Math.round((w.quiz || 0) / w.quizMax * 100)), backgroundColor: q.map(w => (w.quiz || 0) / w.quizMax >= 0.7 ? '#3F6B4F' : (w.quiz || 0) / w.quizMax >= 0.4 ? '#9CA3AF' : COLORS.maroon), borderRadius: 4 }] }, options: chartOpts(100, false) }) : undefined };
+}
+
+const STAGES = [['PersonalStatement', 'Personal Statement'], ['SupplementalEssays', 'Нэмэлт эссэ'], ['Recommendations', 'Тодорхойлолт, зөвлөмж'], ['Transcripts', 'Дүнгийн хуудас'], ['ActivitiesList', 'Хичээлээс гадуурх үйл ажиллагаа'], ['HonorsList', 'Шагнал, амжилт'], ['FinancialAid', 'Санхүүгийн тусламж']];
+const STM = { 'Finalized': ['ok', 'Дууссан'], 'In Progress': ['warn', 'Хийгдэж байна'], 'Not Started': ['mute', 'Эхлээгүй'], 'Need counseling': ['bad', 'Зөвлөгөө хэрэгтэй'], 'N/A': ['mute', 'Шаардлагагүй'] };
+function secCollege(d) {
+  const c = d.college || {}, st = c.stages || {}, prog = d.program || {};
+  const filled = STAGES.filter(x => st[x[0]]);
+  if (!c.list && !filled.length) return { title: 'Их сургуулийн бэлтгэл', html: empty('Өргөдлийн мэдээлэл удахгүй орно. Зөвлөх багш тантай холбогдоно.') };
+  const applicable = filled.filter(x => st[x[0]] !== 'N/A'), done = applicable.filter(x => st[x[0]] === 'Finalized').length;
+  const dl = c.ed1Deadline ? daysLeft(c.ed1Deadline) : null;
+  let html = blurbBox(prog.ed1Blurb);
+  html += `<div class="attendance-grid two">
+    <div class="att-card"><div class="num">${applicable.length ? done + ' / ' + applicable.length : '–'}</div><div class="label">Дууссан үе шат</div></div>
+    <div class="att-card"><div class="num" style="font-size:${c.ed1Deadline ? 20 : 32}px">${c.ed1Deadline ? esc(mnDate(c.ed1Deadline)) : '–'}</div><div class="label">ED1 хугацаа</div>${dl !== null ? `<div class="sub">${dl < 0 ? 'Хугацаа өнгөрсөн' : dl === 0 ? 'Өнөөдөр' : dl + ' хоног үлдсэн'}</div>` : ''}</div></div>`;
+  if (c.list) html += `<div class="kv"><span>Сургууль</span><span><b>${esc(c.list)}</b></span></div>`;
+  if (filled.length) html += '<div id="college-table-wrap" style="margin-top:16px"><table class="score-table"><thead><tr><th>Үе шат</th><th>Төлөв</th></tr></thead><tbody>' +
+    filled.map(x => { const m = STM[st[x[0]]] || ['mute', st[x[0]]]; return `<tr><td>${x[1]}</td><td>${badge(m[0], m[1])}</td></tr>`; }).join('') + '</tbody></table></div>';
+  if (c.nextStep) html += `<div class="note-card" style="margin-top:4px"><div class="role">Дараагийн алхам</div><div class="text" style="color:var(--ink)">${esc(c.nextStep)}</div></div>`;
+  if (c.lastUpdated) html += `<p class="note-line">Шинэчилсэн: ${esc(mnDate(c.lastUpdated))}</p>`;
+  return { title: 'Их сургуулийн бэлтгэл', html };
+}
+
+function secNotes(d) {
+  const N = (d.teacherNotes || []).filter(n => String(n.Note || '').trim());
+  if (!N.length) return { title: 'Багш нарын тайлбар', html: empty('Багшийн тайлбар одоогоор оруулаагүй байна.') };
+  return { title: 'Багш нарын тайлбар', html: '<div class="notes-grid">' + N.map(n => `<div class="note-card"><div class="role">${esc(String(n.TeacherRole || '').split('|').pop().trim())}</div><div class="teacher">${esc(n.TeacherName)}</div><div class="text">${esc(n.Note)}</div></div>`).join('') + '</div>' };
+}
+
+function secContact() {
+  const tel = CONTACT.phone.replace(/[^\d+]/g, '');
+  const ic = { mail: '<path d="M3 6h18v12H3V6z" stroke="currentColor" stroke-width="1.6"/><path d="M3 6l9 7 9-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+    phone: '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1L6.6 10.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>' };
+  const svg = p => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
+  return { title: 'Холбоо барих', html: `<div class="contact-card"><p class="contact-message">Асуух зүйл, тусламж хэрэгтэй үед бидэнтэй чөлөөтэй холбогдоорой. Таны хүүхдийн мөрөөдлийн их сургуульдаа элсэх замд хамтдаа алхацгаая.</p>
+    <div class="contact-links"><a class="contact-link" href="mailto:${esc(CONTACT.email)}">${svg(ic.mail)}${esc(CONTACT.email)}</a>
+    <a class="contact-link" href="tel:${esc(tel)}">${svg(ic.phone)}${esc(CONTACT.phone)}</a></div></div>` };
+}
+
+/* =======================================================================
+   DEMO DATA (fictional students) — same shape the Apps Script returns
+   ======================================================================= */
+const BLURB = {
+  satBlurb: 'SAT шалгалт нь жилд 8 удаа буюу 3, 5, 6, 8, 9, 10, 11, 12 саруудад авагддаг Америкийн их сургуулийн элсэлтийн стандарт шалгалт юм. Математик болон Англи хэлний ур чадварыг шалгаж, тус бүр 200–800, нийт 400–1600 оноогоор үнэлдэг.\n\nНэг удаа шалгалт өгөхөд $111 төлбөртэй. Ихэнх сурагчид 2–3 удаа өгч байж хүссэн оноондоо хүрдэг.',
+  ieltsBlurb: 'IELTS нь гадаадын их дээд сургуульд суралцах болон виз авахад шаардагддаг, олон улсад хүлээн зөвшөөрөгдсөн Англи хэлний түвшин тогтоох шалгалт юм. Унших, Бичих, Сонсох, Ярих гэсэн 4 чадварыг 1–9 хүртэлх оноогоор дүгнэнэ.',
+  langBlurb: 'Англи Уран Зохиолын хичээл нь зөвхөн дүрэм, үг цээжлэх бус, уран зохиолоор дамжуулан шүүмжлэлт сэтгэлгээ болон харилцах чадварыг хөгжүүлэхэд чиглэсэн цогц хичээл юм.',
+  ed1Blurb: 'ED1 (Early Decision 1) нь сурагч хамгийн их хүсч буй ганц сургуульдаа бусдаас эрт, ихэвчлэн 11-р сарын 1–15-ны дотор өргөдлөө өгөх эхний шат юм. Хариуг ихэвчлэн 12-р сарын дундуур мэдэгддэг.\n\nАнхаарах зүйл: ED нь заавал суралцах үүрэгтэй өргөдөл. Элсвэл тэр сургуульд суралцах ёстой тул сурагч зөвхөн нэг сургуульд ED өгдөг.'
+};
+const BOOT = { next: { start: '2026-11-12', end: '2026-11-14', time: '', location: '' },
+  blurb: 'Bootcamp бол өргөдлийн ажлыг эрчимтэй ахиулах тусгай өдрүүд юм. Эдгээр өдрүүдэд сурагчид өргөдлийн материалдаа төвлөрч, зөвлөх багш нартай хамтран ажиллана.' };
+const ROLE = { m: 'Language Arts & Academic Writing Teacher | Уран Зохиол & Бичгийн багш', n: 'IELTS teacher | IELTS багш', i: 'Их сургуулийн өргөдлийн зөвлөх' };
+const mkSch = x => x.map(([day, b]) => ({ day, blocks: b.map(([start, end, subject]) => ({ start, end, subject })) }));
+const wk = (week, unit, att, quiz, quizMax, ctq, ctqMax, task, taskStatus) => ({ week, unit, att, quiz, quizMax, ctq, ctqMax, task, taskStatus });
+const UN = { 2: 'The Hunger Games 1–2', 3: 'The Hunger Games 3', 4: 'To Build A Fire', 5: 'Animal Farm 1–6', 6: 'Argumentative Essay & Debate', 7: 'Animal Farm 7–10', 8: 'Black Mirror' };
+const DEMOS = {
+  DEMO1: {
+    student: { name: 'Сарнай Бат-Эрдэнэ', school: 'Шинэ Монгол ЕБС', phone: '9911 2233', email: 'sarnai@example.com', program: 'Fall Scholars 2026', className: 'A', scheduleShort: 'Даваа, Лхагва, Баасан 17:00–21:00 · Бямба 08:00–16:00', photoUrl: null },
+    attendance: { attended: 27, excused: 4, absent: 2 },
+    counseling: { sessions: 32, totalMinutes: 960 },
+    bootcamp: BOOT,
+    sat: { status: 'Retake scheduled', nextTest: '2026-11-07', first: { date: '2026-09-12', total: 1260, english: 610, math: 650 }, last: { date: '2026-10-01', total: 1340, english: 660, math: 680 }, official: { date: '2026-10-03', total: 1380, english: 680, math: 700 } },
+    ielts: { status: 'Scheduled', official: null, mocks: [{ date: '2026-09-19', listening: 7, reading: 8, writing: 5.5, speaking: 6, overall: 6.5 }, { date: '2026-10-03', listening: 7.5, reading: 8.5, writing: 6, speaking: 6, overall: 7 }] },
+    lang: [wk(2, UN[2], 'PRESENT', 4, 7, 2, 2), wk(3, UN[3], 'PRESENT', 6.5, 8, 0, 2), wk(4, UN[4], 'PRESENT', 8, 8, 1, 2, 'Literary Analysis Essay', 'SUBMITTED'), wk(5, UN[5], 'ABSENT', 0, 10, 0, 2), wk(6, UN[6], 'PRESENT'), wk(7, UN[7], 'PRESENT'), wk(8, UN[8], 'PRESENT')],
+    college: { list: 'Minerva University', ed1Deadline: '2026-11-15', stages: { PersonalStatement: 'In Progress', SupplementalEssays: 'Finalized', Recommendations: 'Finalized', Transcripts: 'Finalized', ActivitiesList: 'In Progress', HonorsList: 'In Progress', FinancialAid: 'Not Started' }, nextStep: 'Personal Statement-ийн 3-р ноорогоо зөвлөхөд үзүүлэх', lastUpdated: '2026-11-02' },
+    schedule: mkSch([['Даваа', [['17:00', '18:15', 'DSAT Англи хэл'], ['18:30', '19:45', 'Өргөдлийн үйл явцын хичээл'], ['19:45', '21:00', 'Бие даалт, хичээл хийх цаг']]], ['Мягмар', []], ['Лхагва', [['17:00', '18:15', 'Англи Уран Зохиол'], ['18:30', '19:45', 'IELTS'], ['19:45', '21:00', 'Бие даалт']]], ['Пүрэв', []], ['Баасан', [['17:00', '18:15', 'Эсээ бичгийн хичээл'], ['18:30', '21:00', 'Өргөдлийн үйл явцын хичээл']]], ['Бямба', [['08:00', '13:15', 'DSAT / IELTS шалгалт, анализын цаг'], ['13:30', '16:00', 'Ганцаарчилсан зөвлөгөөний цаг']]]]),
+    teacherNotes: [
+      { TeacherName: 'Г. Мишээл', TeacherRole: ROLE.m, Note: 'Сарнай бол маш сайн сурагч. Хичээлийн хэлэлцүүлэгт тогтмол оролцдог, даалгавраа цагт нь гүйцэтгэдэг, сорилтууд дээр сайн дүн авдаг. Ажил болон өргөдлийн ажлаа зэрэг зохицуулж, цагийн хуваарь нь маш ачаалалтай байдгийг би мэднэ, гэсэн ч ийм сайн гүйцэтгэл үзүүлж байгаа нь сайшаалтай.' },
+      { TeacherName: 'Х. Норовсүрэн', TeacherRole: ROLE.n, Note: 'Хичээлд оролцоо болон идэвх сайтай. Сайн хандлагатай, ирээдүйтэй суралцагч. IELTS-ийн шалгалтад сайн бэлтгэж байгаа бөгөөд цаашид өргөдлийн хэсгүүдээ цагт нь дуусгах, цагийн болон стресс менежмент дээр анхаарвал зохистой.' },
+      { TeacherName: 'О.Инжинааш', TeacherRole: ROLE.i, Note: 'Идэвхтэй сурагч бөгөөд өргөдлийн явц маш сайтай байна. Цаашид англи хэлний түвшингээ илүү өндөрт гаргахад анхаарч ажиллаарай.' }],
+    program: BLURB
+  },
+  DEMO2: {
+    student: { name: 'Тэмүүлэн Ганбат', school: 'Монгол тэмүүлэл сургууль', phone: '9900 1122', email: 'temuulen@example.com', program: '12Scholars', className: '2027’', scheduleShort: 'Даваа, Лхагва, Баасан 17:00–21:00 · Бямба 08:00–16:00', photoUrl: null },
+    attendance: { attended: 78, excused: 5, absent: 2 },
+    counseling: { sessions: 57, totalMinutes: 1710 },
+    bootcamp: BOOT,
+    sat: { status: 'Score received', nextTest: null, first: null, last: null, official: { date: '2026-10-03', total: 1450, english: 670, math: 780 } },
+    ielts: { status: 'Score received', official: { date: '2026-10-17', listening: 9, reading: 8.5, writing: 6.5, speaking: 7, overall: 8 }, mocks: [] },
+    lang: [],
+    college: { list: 'Clark University', ed1Deadline: '2026-11-01', stages: { PersonalStatement: 'Finalized', SupplementalEssays: 'In Progress', Recommendations: 'Finalized', Transcripts: 'Finalized', ActivitiesList: 'Finalized', HonorsList: 'Finalized', FinancialAid: 'Finalized' }, nextStep: 'Нэмэлт эссэгээ дуусгаж илгээх', lastUpdated: '2026-11-01' },
+    schedule: mkSch([['Даваа', [['17:00', '18:15', 'Reading Seminar'], ['18:30', '19:45', 'Өргөдлийн үйл явцын хичээл']]], ['Лхагва', [['17:00', '18:15', 'Судалгаа, төсөл хөтөлбөр'], ['18:30', '19:45', 'Өргөдлийн үйл явцын хичээл']]], ['Баасан', [['17:00', '18:00', 'Мэргэжлийн ур чадвар'], ['19:30', '21:00', 'Академик бичих чадвар']]], ['Бямба', [['08:00', '13:15', 'DSAT / IELTS шалгалт, анализын цаг']]]]),
+    teacherNotes: [
+      { TeacherName: 'Г. Мишээл', TeacherRole: ROLE.m, Note: 'Тэмүүлэн бол манай 12 Scholars хөтөлбөрт суралцаж байгаад үнэхээр баяртай байх сурагч юм. Тэрээр сайхан сэтгэлтэй, зөв хүн гэдгээрээ төдийгүй ажилдаа хандах хандлага нь үнэхээр биширмээр гэдгээрээ хамт сурагчдын хайрыг хүлээдэг.' },
+      { TeacherName: 'О.Инжинааш', TeacherRole: ROLE.i, Note: 'Хөтөлбөртөө идэвхтэй оролцдог сурагч. Ганцаарчилсан зөвлөгөөнд тогтмол хамрагдаж байгаа хэдий ч эссэ болон өргөдлийн материалаа илүү сайжруулахын тулд илүү олон удаа зөвлөгөө авах хэрэгтэй.' }],
+    program: BLURB
+  },
+  DEMO3: {
+    student: { name: 'Номин Оюун', school: 'Canadian School of Ulaanbaatar', phone: '', email: '', program: 'Fall Scholars 2026', className: 'B', scheduleShort: '', photoUrl: null },
+    attendance: { attended: 0, excused: 0, absent: 0 },
+    counseling: { sessions: 0, totalMinutes: 0 },
+    bootcamp: BOOT,
+    sat: { status: 'Scheduled', nextTest: '2026-12-05', first: { date: '2026-09-26', total: 890, english: 370, math: 520 }, last: null, official: null },
+    ielts: { status: null, official: null, mocks: [] },
+    lang: [wk(2, UN[2], 'PRESENT', 7, 7, 2, 2), wk(3, UN[3], 'PRESENT', 1.5, 8, 0, 2), wk(4, UN[4], 'PRESENT', 7, 8, 2, 2, 'Literary Analysis Essay', 'MISSING')],
+    college: { list: '', ed1Deadline: '', stages: {}, nextStep: '', lastUpdated: '' },
+    schedule: [],
+    teacherNotes: [{ TeacherName: 'О.Инжинааш', TeacherRole: ROLE.i, Note: '' }],
+    program: BLURB
+  }
+};
 </script>
 
 </body>
