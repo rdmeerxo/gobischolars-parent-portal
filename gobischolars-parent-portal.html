@@ -775,7 +775,12 @@
    SETUP: paste your deployed Apps Script Web App URL (ends in /exec).
    Leave it empty to see the page with demo data only.
    ======================================================================= */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwd1I59ccOezybhQ7n7gKX6V3dv6o4MER0Ki1feQXqTMa9ec0XqZWgOk3dOU4tBVsGNog/exec';
+const SCRIPT_ID = 'AKfycbwd1I59ccOezybhQ7n7gKX6V3dv6o4MER0Ki1feQXqTMa9ec0XqZWgOk3dOU4tBVsGNog';
+const APPS_SCRIPT_URLS = [
+  'https://script.google.com/macros/s/' + SCRIPT_ID + '/exec',
+  'https://script.google.com/a/macros/gobischolars/s/' + SCRIPT_ID + '/exec'   // Google Workspace form of the same link
+];
+const APPS_SCRIPT_URL = APPS_SCRIPT_URLS[0];   // leave APPS_SCRIPT_URLS empty to see demo data
 
 /* Contact details shown to parents */
 const CONTACT = { email: 'info@gobischolars.com', phone: '+976 9500 9123' };
@@ -857,29 +862,35 @@ function showScreen(id) {
 function goBack() { $('code-input').value = ''; $('login-error').textContent = ''; showScreen('login-screen'); window.scrollTo(0, 0); }
 
 async function fetchReport(code) {
-  if (!APPS_SCRIPT_URL) {
+  if (!APPS_SCRIPT_URLS.length) {
     await new Promise(r => setTimeout(r, 250));
     const d = DEMOS[code.toUpperCase()];
     return d ? Object.assign({ success: true }, d) : { success: false };
   }
-  const res = await fetch(APPS_SCRIPT_URL + '?code=' + encodeURIComponent(code));
-  return res.json();
+  let lastErr;
+  for (const base of APPS_SCRIPT_URLS) {
+    try {
+      const res = await fetch(base + '?code=' + encodeURIComponent(code));
+      return JSON.parse(await res.text());
+    } catch (e) { lastErr = e; console.error('API error for ' + base, e); }
+  }
+  throw lastErr;
 }
 async function handleLookup() {
   const code = $('code-input').value.trim(), errEl = $('login-error');
   errEl.textContent = '';
   if (!code) { errEl.textContent = 'Сурагчийн кодоо оруулна уу.'; return; }
+  const hint = e => '<br><small style="color:#9CA3AF">' + esc(String((e && (e.name + ': ' + e.message)) || e).slice(0, 90)) + '</small>';
   showScreen('loading-screen');
-  try {
-    const data = await fetchReport(code);
-    if (!data.success) { showScreen('login-screen'); errEl.textContent = 'Код олдсонгүй. Багштайгаа холбогдож кодоо шалгаарай.'; return; }
-    showScreen('report-screen'); renderReport(data); window.scrollTo(0, 0);
-  } catch (err) {
-    showScreen('login-screen'); errEl.textContent = 'Холболтын алдаа гарлаа. Дахин оролдоно уу.';
-  }
+  let data;
+  try { data = await fetchReport(code); }
+  catch (err) { showScreen('login-screen'); errEl.innerHTML = 'Холболтын алдаа гарлаа. Дахин оролдоно уу.' + hint(err); return; }
+  if (!data || !data.success) { showScreen('login-screen'); errEl.textContent = 'Код олдсонгүй. Багштайгаа холбогдож кодоо шалгаарай.'; return; }
+  try { showScreen('report-screen'); renderReport(data); window.scrollTo(0, 0); }
+  catch (err) { console.error(err); showScreen('login-screen'); errEl.innerHTML = 'Мэдээллийг харуулахад алдаа гарлаа.' + hint(err); }
 }
 $('code-input').addEventListener('keydown', e => { if (e.key === 'Enter') handleLookup(); });
-if (!APPS_SCRIPT_URL) {
+if (!APPS_SCRIPT_URLS.length) {
   const box = document.createElement('div');
   box.className = 'demo-box';
   box.innerHTML = 'Загвар үзэх (demo):<br><button type="button" data-d="DEMO1">Намрын сурагч</button><button type="button" data-d="DEMO2">12 Scholars</button><button type="button" data-d="DEMO3">Шинэ сурагч</button>';
